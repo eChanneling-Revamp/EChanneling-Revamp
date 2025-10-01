@@ -11,7 +11,7 @@ export default withAuth({
       if (path.startsWith("/api/admin") && token.role !== "admin") return false;
       if (path.startsWith("/api/doctor") && token.role !== "doctor")
         return false;
-      if (path.startsWith("/api/hospital") && token.role !== "hospital")
+      if (path.startsWith("/api/hospital") && !["admin", "hospital"].includes(token.role as string))
         return false;
       if (path.startsWith("/api/user") && token.role !== "user") return false;
       if (path.startsWith("/api/telecomagent") && token.role !== "telecomagent")
