@@ -1,0 +1,361 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://prisma.io/docs/prisma-schema-reference
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  doctorProfile Doctor?
+  hospitalProfile Hospital?
+  auditLogs     AuditLog[]
+  invoices      Invoice[]
+  payments      Payment[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Hospital {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  address         String
+  city            String
+  province        String
+  phone           String
+  email           String
+  website         String?
+  description     String?
+  status          HospitalStatus @default(ACTIVE)
+  registrationNumber String
+  licenseNumber   String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String   @db.ObjectId
+
+  user            User     @relation(fields: [userId], references: [id])
+  doctors         Doctor[]
+  branches        Branch[]
+  hospitalFunctions HospitalFunction[]
+  fees            Fee[]
+  discounts       Discount[]
+  invoices        Invoice[]
+  auditLogs       AuditLog[]
+
+  @@map("hospitals")
+}
+
+model Doctor {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  email             String   @unique
+  phone             String
+  licenseNumber     String   @unique
+  specializationId  String   @db.ObjectId
+  hospitalId        String   @db.ObjectId
+  status            DoctorStatus @default(PENDING)
+  experience        Int
+  qualifications    String[]
+  consultationFee   Float
+  availableDays     String[]
+  availableHours    String[]
+  bio               String?
+  profileImage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  userId            String   @db.ObjectId
+
+  user              User     @relation(fields: [userId], references: [id])
+  specialization    Specialization @relation(fields: [specializationId], references: [id])
+  hospital          Hospital @relation(fields: [hospitalId], references: [id])
+  invoices          Invoice[]
+  auditLogs         AuditLog[]
+
+  @@map("doctors")
+}
+
+model Specialization {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  nameSinhala String?
+  nameTamil   String?
+  description String?
+  status      Status   @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  doctors     Doctor[]
+
+  @@map("specializations")
+}
+
+model HospitalFunction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  hospitalId  String   @db.ObjectId
+  status      Status   @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+
+  @@map("hospital_functions")
+}
+
+model CorporateAgent {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  email           String   @unique
+  phone           String
+  company         String
+  address         String
+  contactPerson   String
+  status          Status   @default(ACTIVE)
+  commissionRate  Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("corporate_agents")
+}
+
+model Payment {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  amount          Float
+  currency        String   @default("LKR")
+  paymentMethod   PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?
+  reference       String?
+  description     String?
+  userId          String   @db.ObjectId
+  invoiceId       String?  @db.ObjectId
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+  invoice         Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@map("payments")
+}
+
+model Fee {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  description     String?
+  amount          Float
+  type            FeeType
+  hospitalId      String   @db.ObjectId
+  status          Status   @default(ACTIVE)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hospital        Hospital @relation(fields: [hospitalId], references: [id])
+
+  @@map("fees")
+}
+
+model Discount {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  description     String?
+  percentage      Float?
+  fixedAmount     Float?
+  type            DiscountType
+  hospitalId      String   @db.ObjectId
+  validFrom       DateTime
+  validTo         DateTime
+  status          Status   @default(ACTIVE)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hospital        Hospital @relation(fields: [hospitalId], references: [id])
+
+  @@map("discounts")
+}
+
+model Branch {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  address         String
+  city            String
+  province        String
+  phone           String
+  email           String
+  hospitalId      String   @db.ObjectId
+  status          Status   @default(ACTIVE)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hospital        Hospital @relation(fields: [hospitalId], references: [id])
+
+  @@map("branches")
+}
+
+model Invoice {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceNumber   String   @unique
+  amount          Float
+  tax             Float    @default(0)
+  totalAmount     Float
+  status          InvoiceStatus @default(PENDING)
+  dueDate         DateTime
+  userId          String   @db.ObjectId
+  doctorId        String?  @db.ObjectId
+  hospitalId      String?  @db.ObjectId
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+  doctor          Doctor?  @relation(fields: [doctorId], references: [id])
+  hospital        Hospital? @relation(fields: [hospitalId], references: [id])
+  payments        Payment[]
+
+  @@map("invoices")
+}
+
+model AuditLog {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  action          String
+  entityType      String
+  entityId        String
+  userId          String   @db.ObjectId
+  hospitalId      String?  @db.ObjectId
+  doctorId        String?  @db.ObjectId
+  oldValues       Json?
+  newValues       Json?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id])
+  hospital        Hospital? @relation(fields: [hospitalId], references: [id])
+  doctor          Doctor?  @relation(fields: [doctorId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  USER
+  HOSPITAL
+  DOCTOR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum HospitalStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_APPROVAL
+}
+
+enum DoctorStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+  REJECTED
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  MOBILE_PAYMENT
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum FeeType {
+  CONSULTATION
+  REGISTRATION
+  PROCESSING
+  OTHER
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}

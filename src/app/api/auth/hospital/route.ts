@@ -8,8 +8,8 @@ import { getKafkaProducer } from '@/kafka/producer';
 const prisma = new PrismaClient();
 
 /**
- * POST /api/auth/signup
- * Sign up a new user (public registration)
+ * POST /api/auth/hospital
+ * Register a new hospital
  */
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<UserResponse>>> {
   try {
@@ -27,11 +27,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
     const userData = validation.data!;
 
-    // For public signup, only allow USER role
-    if (userData.role !== 'USER') {
+    // For hospital registration, only allow HOSPITAL role
+    if (userData.role !== 'HOSPITAL') {
       return NextResponse.json({
         success: false,
-        error: 'Only USER role is allowed for public signup',
+        error: 'Only HOSPITAL role is allowed for hospital registration',
       }, { status: 400 });
     }
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         name: userData.name,
         email: userData.email,
         password: hashedPassword,
-        role: 'USER', // Force USER role for public signup
+        role: 'HOSPITAL', // Force HOSPITAL role for hospital registration
         status: 'ACTIVE',
       }
     });
@@ -83,15 +83,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     return NextResponse.json({
       success: true,
       data: response,
-      message: 'User signed up successfully',
+      message: 'Hospital registered successfully',
     }, { status: 201 });
 
   } catch (error: any) {
-    console.error('Signup API error:', error);
+    console.error('Hospital registration API error:', error);
 
     return NextResponse.json({
       success: false,
-      error: 'Failed to sign up user',
+      error: 'Failed to register hospital',
       message: error.message,
     }, { status: 500 });
   }

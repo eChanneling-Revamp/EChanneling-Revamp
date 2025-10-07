@@ -1,11 +1,15 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/mongodb";
-import User from "@/models/User";
+import { PrismaClient } from "@prisma/client";
+import { getKafkaProducer } from "@/kafka/producer";
+
+const prisma = new PrismaClient();
 
 const handler = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [
     // ✅ Google Provider
     GoogleProvider({
@@ -21,19 +25,29 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials): Promise<any> {
-        await connectDB();
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
 
-        const user = await User.findOne({ email: credentials?.email });
-        if (!user) throw new Error("Invalid email or password");
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        });
 
-        const isValid = await bcrypt.compare(
-          credentials!.password,
-          user.password
-        );
-        if (!isValid) throw new Error("Invalid email or password");
+        if (!user || !user.password) {
+          throw new Error("Invalid email or password");
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) {
+          throw new Error("Invalid email or password");
+        }
+
+        if (user.status !== 'ACTIVE') {
+          throw new Error("Account is not active");
+        }
 
         return {
-          id: user._id.toString(),
+          id: user.id,
           email: user.email,
           role: user.role,
           name: user.name,
@@ -44,21 +58,33 @@ const handler = NextAuth({
 
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      await connectDB();
-
       // Handle Google sign-in
       if (account?.provider === "google") {
-        let existingUser = await User.findOne({ email: profile?.email });
+        let existingUser = await prisma.user.findUnique({
+          where: { email: profile?.email }
+        });
 
         if (!existingUser) {
-          existingUser = await User.create({
-            name: profile?.name,
-            email: profile?.email,
-            role: "user", // default role
+          existingUser = await prisma.user.create({
+            data: {
+              name: profile?.name,
+              email: profile?.email,
+              role: "USER", // default role
+              status: "ACTIVE",
+            }
+          });
+
+          // Send Kafka event for new user
+          const kafkaProducer = getKafkaProducer();
+          await kafkaProducer.sendUserCreatedEvent({
+            userId: existingUser.id,
+            email: existingUser.email,
+            name: existingUser.name || '',
+            role: existingUser.role,
           });
         }
 
-        token.userId = existingUser._id.toString();
+        token.userId = existingUser.id;
         token.role = existingUser.role;
         token.name = existingUser.name;
         token.email = existingUser.email;
@@ -85,10 +111,32 @@ const handler = NextAuth({
       (session as any).accessToken = token;
       return session;
     },
+
+    async signIn({ user, account, profile }) {
+      // Log sign-in event
+      if (user.id) {
+        const kafkaProducer = getKafkaProducer();
+        await kafkaProducer.sendAuditLogEvent({
+          action: 'LOGIN',
+          entityType: 'USER',
+          entityId: user.id,
+          userId: user.id,
+          newValues: {
+            provider: account?.provider,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }
+      return true;
+    },
   },
 
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
 });
 
 export { handler as GET, handler as POST };
