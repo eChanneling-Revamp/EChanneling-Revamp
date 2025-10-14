@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
-import { getKafkaProducer } from "@/kafka/producer";
+import { getSafeKafkaProducer } from "@/kafka/safe-producer";
 
 const prisma = new PrismaClient();
 
@@ -67,15 +67,15 @@ const handler = NextAuth({
         if (!existingUser) {
           existingUser = await prisma.user.create({
             data: {
-              name: profile?.name,
-              email: profile?.email,
+              name: profile?.name || 'Google User',
+              email: profile?.email || '',
               role: "USER", // default role
               status: "ACTIVE",
             }
           });
 
-          // Send Kafka event for new user
-          const kafkaProducer = getKafkaProducer();
+          // Send Kafka event for new user (safe - won't block if Kafka fails)
+          const kafkaProducer = getSafeKafkaProducer();
           await kafkaProducer.sendUserCreatedEvent({
             userId: existingUser.id,
             email: existingUser.email,
@@ -86,7 +86,7 @@ const handler = NextAuth({
 
         token.userId = existingUser.id;
         token.role = existingUser.role;
-        token.name = existingUser.name;
+        token.name = existingUser.name || '';
         token.email = existingUser.email;
       }
 
@@ -113,9 +113,9 @@ const handler = NextAuth({
     },
 
     async signIn({ user, account, profile }) {
-      // Log sign-in event
+      // Log sign-in event (safe - won't block if Kafka fails)
       if (user.id) {
-        const kafkaProducer = getKafkaProducer();
+        const kafkaProducer = getSafeKafkaProducer();
         await kafkaProducer.sendAuditLogEvent({
           action: 'LOGIN',
           entityType: 'USER',

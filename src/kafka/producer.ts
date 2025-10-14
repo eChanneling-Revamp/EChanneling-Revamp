@@ -48,7 +48,15 @@ export class KafkaProducer {
   }
 
   /**
-   * Send event to Kafka topic
+   * Check if producer is connected
+   */
+  private isConnected(): boolean {
+    // Simple check - in production you might want more sophisticated checking
+    return this.producer !== null;
+  }
+
+  /**
+   * Send event to Kafka topic (safe - won't throw if disconnected)
    * @param topic - Kafka topic name
    * @param message - Event message
    * @param key - Optional message key for partitioning
@@ -76,7 +84,28 @@ export class KafkaProducer {
       console.log(`✅ Event sent to topic ${topic}:`, result);
     } catch (error) {
       console.error(`❌ Failed to send event to topic ${topic}:`, error);
-      throw error;
+      // Don't throw - make it non-blocking for application flow
+      // In production, you might want to queue these events for retry
+    }
+  }
+
+  /**
+   * Send event to Kafka topic safely (non-blocking)
+   * @param topic - Kafka topic name
+   * @param message - Event message
+   * @param key - Optional message key for partitioning
+   */
+  async sendEventSafe(
+    topic: string,
+    message: any,
+    key?: string
+  ): Promise<boolean> {
+    try {
+      await this.sendEvent(topic, message, key);
+      return true;
+    } catch (error) {
+      console.warn(`⚠️ Kafka event failed for topic ${topic}, continuing anyway:`, error);
+      return false;
     }
   }
 
@@ -89,8 +118,8 @@ export class KafkaProducer {
     email: string;
     name: string;
     role: string;
-  }): Promise<void> {
-    await this.sendEvent(KAFKA_TOPICS.USER_CREATED, {
+  }): Promise<boolean> {
+    return await this.sendEventSafe(KAFKA_TOPICS.USER_CREATED, {
       event: 'user.created',
       data: userData,
     }, userData.userId);
@@ -106,8 +135,8 @@ export class KafkaProducer {
     name: string;
     role: string;
     changes: Record<string, any>;
-  }): Promise<void> {
-    await this.sendEvent(KAFKA_TOPICS.USER_UPDATED, {
+  }): Promise<boolean> {
+    return await this.sendEventSafe(KAFKA_TOPICS.USER_UPDATED, {
       event: 'user.updated',
       data: userData,
     }, userData.userId);
@@ -125,8 +154,8 @@ export class KafkaProducer {
     hospitalName: string;
     specializationId: string;
     specializationName: string;
-  }): Promise<void> {
-    await this.sendEvent(KAFKA_TOPICS.DOCTOR_VERIFIED, {
+  }): Promise<boolean> {
+    return await this.sendEventSafe(KAFKA_TOPICS.DOCTOR_VERIFIED, {
       event: 'doctor.verified',
       data: doctorData,
     }, doctorData.doctorId);
@@ -144,8 +173,8 @@ export class KafkaProducer {
     userName: string;
     amount: number;
     dueDate: string;
-  }): Promise<void> {
-    await this.sendEvent(KAFKA_TOPICS.INVOICE_GENERATED, {
+  }): Promise<boolean> {
+    return await this.sendEventSafe(KAFKA_TOPICS.INVOICE_GENERATED, {
       event: 'invoice.generated',
       data: invoiceData,
     }, invoiceData.invoiceId);
@@ -163,8 +192,8 @@ export class KafkaProducer {
     amount: number;
     transactionId: string;
     invoiceId?: string;
-  }): Promise<void> {
-    await this.sendEvent(KAFKA_TOPICS.PAYMENT_COMPLETED, {
+  }): Promise<boolean> {
+    return await this.sendEventSafe(KAFKA_TOPICS.PAYMENT_COMPLETED, {
       event: 'payment.completed',
       data: paymentData,
     }, paymentData.paymentId);
@@ -180,8 +209,8 @@ export class KafkaProducer {
     template: string;
     status: 'sent' | 'failed';
     messageId?: string;
-  }): Promise<void> {
-    await this.sendEvent(KAFKA_TOPICS.EMAIL_SENT, {
+  }): Promise<boolean> {
+    return await this.sendEventSafe(KAFKA_TOPICS.EMAIL_SENT, {
       event: 'email.sent',
       data: emailData,
     }, emailData.to);
@@ -200,8 +229,8 @@ export class KafkaProducer {
     newValues?: Record<string, any>;
     ipAddress?: string;
     userAgent?: string;
-  }): Promise<void> {
-    await this.sendEvent(KAFKA_TOPICS.AUDIT_LOG, {
+  }): Promise<boolean> {
+    return await this.sendEventSafe(KAFKA_TOPICS.AUDIT_LOG, {
       event: 'audit.log.created',
       data: auditData,
     }, auditData.entityId);
@@ -217,8 +246,8 @@ export class KafkaProducer {
     topic: string,
     eventData: any,
     key?: string
-  ): Promise<void> {
-    await this.sendEvent(topic, eventData, key);
+  ): Promise<boolean> {
+    return await this.sendEventSafe(topic, eventData, key);
   }
 }
 
