@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type ApiResponse = {
   status: number;
@@ -15,6 +16,16 @@ export default function Dashboard() {
   const [doctorRes, setDoctorRes] = useState<ApiResponse | null>(null);
   const [hospitalRes, setHospitalRes] = useState<ApiResponse | null>(null);
   const [userRes, setUserRes] = useState<ApiResponse | null>(null);
+  const router = useRouter();
+
+  if(session?.user?.role == "corporateagent"){
+    router.push("https://corporate-agent-frontend.vercel.app/");
+  } else{
+
+    router.push(`/${session?.user?.role}`);
+  }
+
+
 
   useEffect(() => {
     if (status === "loading") return; // wait until session is loaded
