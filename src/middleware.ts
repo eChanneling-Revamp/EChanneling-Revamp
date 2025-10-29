@@ -24,11 +24,10 @@ export default withAuth({
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/admin/:path*",
-    "/doctor/:path*",
-    "/hospital/:path*",
-    "/user/:path*",
-    "/api/:path*", // 🔑 include API routes
+    "/api/admin/:path*",
+    "/api/doctor/:path*",
+    "/api/hospital/:path*",
+    "/api/user/:path*",
+    "/api/telecomagent/:path*",
   ],
 };
