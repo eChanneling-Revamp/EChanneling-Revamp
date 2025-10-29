@@ -114,46 +114,77 @@ const AddHospital: React.FC = () => {
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <div className="w-full max-w-3xl bg-white rounded-xl border border-gray-200 p-8 flex flex-col items-center">
-        <h1 className="text-4xl font-bold mb-2 text-blue-700">Add New Hospital</h1>
-        <p className="mb-6 text-gray-600">Fill in the details to register a new hospital.</p>
-        {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded w-full">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-8 w-full">
-          {/* Basic Information */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Basic Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Add New Hospital</h1>
+          <p className="mt-1 text-sm text-gray-600">Fill in the details to register a new hospital.</p>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
+
+      {/* Form Container */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">Basic Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hospital Name <span className="text-red-500">*</span>
+              </label>
               <input
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder="Hospital Name"
+                placeholder="Enter hospital name"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Registration Number <span className="text-red-500">*</span>
+              </label>
               <input
                 name="registrationNumber"
                 value={formData.registrationNumber}
                 onChange={handleInputChange}
-                placeholder="Registration Number"
+                placeholder="Enter registration number"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tax ID <span className="text-red-500">*</span>
+              </label>
               <input
                 name="taxId"
                 value={formData.taxId}
                 onChange={handleInputChange}
-                placeholder="Tax ID"
+                placeholder="Enter tax ID"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hospital Type <span className="text-red-500">*</span>
+              </label>
               <select
                 name="hospitalType"
                 value={formData.hospitalType}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900"
               >
                 <option value="Private General Hospital">Private General Hospital</option>
                 <option value="Private Specialty Hospital">Private Specialty Hospital</option>
@@ -161,131 +192,170 @@ const AddHospital: React.FC = () => {
               </select>
             </div>
           </div>
+        </div>
 
-          {/* Contact & Address */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Contact & Address</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Contact & Address */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">Contact & Address</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Contact Number <span className="text-red-500">*</span>
+              </label>
               <input
                 name="contactNumber"
                 value={formData.contactNumber}
                 onChange={handleInputChange}
-                placeholder="Contact Number"
+                placeholder="Enter contact number"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email <span className="text-red-500">*</span>
+              </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="Email"
+                placeholder="Enter email address"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Street <span className="text-red-500">*</span>
+              </label>
               <input
                 name="address.street"
                 value={formData.address.street}
                 onChange={handleInputChange}
-                placeholder="Street"
+                placeholder="Enter street address"
                 required
-                className="w-full px-4 py-2 border rounded-lg md:col-span-2"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                City <span className="text-red-500">*</span>
+              </label>
               <input
                 name="address.city"
                 value={formData.address.city}
                 onChange={handleInputChange}
-                placeholder="City"
+                placeholder="Enter city"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                State <span className="text-red-500">*</span>
+              </label>
               <input
                 name="address.state"
                 value={formData.address.state}
                 onChange={handleInputChange}
-                placeholder="State"
+                placeholder="Enter state/province"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ZIP Code <span className="text-red-500">*</span>
+              </label>
               <input
                 name="address.zipCode"
                 value={formData.address.zipCode}
                 onChange={handleInputChange}
-                placeholder="ZIP Code"
+                placeholder="Enter ZIP code"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Country <span className="text-red-500">*</span>
+              </label>
               <input
                 name="address.country"
                 value={formData.address.country}
                 onChange={handleInputChange}
-                placeholder="Country"
+                placeholder="Enter country"
                 required
-                className="w-full px-4 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
               />
             </div>
           </div>
+        </div>
 
-          {/* Operating Hours */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Operating Hours</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {days.map((day) => (
-                <div key={day} className="flex items-center gap-4 bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  <span className="w-24 text-sm font-medium text-gray-700 capitalize">{day}</span>
+        {/* Operating Hours */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">Operating Hours</h2>
+          <div className="space-y-3">
+            {days.map((day) => (
+              <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-3 min-w-[140px]">
                   <input
                     type="checkbox"
                     checked={formData.operatingHours[day].isOpen}
                     onChange={(e) =>
                       handleOperatingHoursChange(day, "isOpen", e.target.checked)
                     }
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-[#013e7f] focus:ring-[#013e7f] border-gray-300 rounded"
                   />
-                  <span className="text-sm text-gray-700">Open</span>
-                  {formData.operatingHours[day].isOpen && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="time"
-                        value={formData.operatingHours[day].open}
-                        onChange={(e) =>
-                          handleOperatingHoursChange(day, "open", e.target.value)
-                        }
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                      />
-                      <span className="text-sm text-gray-500">to</span>
-                      <input
-                        type="time"
-                        value={formData.operatingHours[day].close}
-                        onChange={(e) =>
-                          handleOperatingHoursChange(day, "close", e.target.value)
-                        }
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                      />
-                    </div>
-                  )}
+                  <span className="text-sm font-medium text-gray-900 capitalize min-w-[80px]">{day}</span>
                 </div>
-              ))}
-            </div>
+                {formData.operatingHours[day].isOpen ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="time"
+                      value={formData.operatingHours[day].open}
+                      onChange={(e) =>
+                        handleOperatingHoursChange(day, "open", e.target.value)
+                      }
+                      className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900"
+                    />
+                    <span className="text-sm text-gray-500">to</span>
+                    <input
+                      type="time"
+                      value={formData.operatingHours[day].close}
+                      onChange={(e) =>
+                        handleOperatingHoursChange(day, "close", e.target.value)
+                      }
+                      className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900"
+                    />
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-500 italic">Closed</span>
+                )}
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div className="flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-6 py-2 border rounded-lg"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
-            >
-              {loading ? "Creating..." : "Create Hospital"}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Form Actions */}
+        <div className="flex justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#013e7f]"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#013e7f] hover:bg-[#02326a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#013e7f] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Creating..." : "Create Hospital"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
