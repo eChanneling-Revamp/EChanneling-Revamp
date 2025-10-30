@@ -36,6 +36,7 @@ const AddHospital: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [weekdayHours, setWeekdayHours] = useState({ open: "08:00", close: "17:00" });
   const [formData, setFormData] = useState<HospitalFormData>({
     name: "",
     registrationNumber: "",
@@ -84,6 +85,20 @@ const AddHospital: React.FC = () => {
     }));
   };
 
+  const applyToWeekdays = () => {
+    const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+    setFormData((prev) => ({
+      ...prev,
+      operatingHours: {
+        ...prev.operatingHours,
+        ...weekdays.reduce((acc, day) => ({
+          ...acc,
+          [day]: { open: weekdayHours.open, close: weekdayHours.close, isOpen: true },
+        }), {}),
+      },
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -114,9 +129,9 @@ const AddHospital: React.FC = () => {
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Add New Hospital</h1>
           <p className="mt-1 text-sm text-gray-600">Fill in the details to register a new hospital.</p>
@@ -133,9 +148,9 @@ const AddHospital: React.FC = () => {
       {/* Form Container */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-900">Basic Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Hospital Name <span className="text-red-500">*</span>
@@ -146,7 +161,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter hospital name"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -159,7 +174,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter registration number"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -172,7 +187,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter tax ID"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -184,7 +199,7 @@ const AddHospital: React.FC = () => {
                 value={formData.hospitalType}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 min-h-[44px]"
               >
                 <option value="Private General Hospital">Private General Hospital</option>
                 <option value="Private Specialty Hospital">Private Specialty Hospital</option>
@@ -195,9 +210,9 @@ const AddHospital: React.FC = () => {
         </div>
 
         {/* Contact & Address */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-900">Contact & Address</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contact Number <span className="text-red-500">*</span>
@@ -208,7 +223,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter contact number"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -222,7 +237,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter email address"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div className="md:col-span-2">
@@ -235,7 +250,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter street address"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -248,7 +263,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter city"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -261,7 +276,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter state/province"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -274,7 +289,7 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter ZIP code"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
             <div>
@@ -287,16 +302,53 @@ const AddHospital: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="Enter country"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 placeholder-gray-400 min-h-[44px]"
               />
             </div>
           </div>
         </div>
 
         {/* Operating Hours */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900">Operating Hours</h2>
-          <div className="space-y-3">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Operating Hours</h2>
+          </div>
+          
+          {/* Quick Set Weekday Hours */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Set weekday hours (Mon-Fri)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={weekdayHours.open}
+                    onChange={(e) => setWeekdayHours(prev => ({ ...prev, open: e.target.value }))}
+                    className="w-auto px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 bg-white min-h-[44px]"
+                  />
+                  <span className="text-sm text-gray-600 font-medium">to</span>
+                  <input
+                    type="time"
+                    value={weekdayHours.close}
+                    onChange={(e) => setWeekdayHours(prev => ({ ...prev, close: e.target.value }))}
+                    className="w-auto px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 bg-white min-h-[44px]"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={applyToWeekdays}
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#013e7f] text-white rounded-md text-sm font-medium hover:bg-[#02326a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#013e7f] transition-colors min-h-[44px] whitespace-nowrap"
+              >
+                Apply to Mon-Fri
+              </button>
+            </div>
+          </div>
+
+          {/* Individual Day Settings */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {days.map((day) => (
               <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-3 min-w-[140px]">
@@ -318,16 +370,16 @@ const AddHospital: React.FC = () => {
                       onChange={(e) =>
                         handleOperatingHoursChange(day, "open", e.target.value)
                       }
-                      className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900"
+                      className="w-auto px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 min-h-[44px]"
                     />
-                    <span className="text-sm text-gray-500">to</span>
+                    <span className="text-sm text-gray-500 font-medium">to</span>
                     <input
                       type="time"
                       value={formData.operatingHours[day].close}
                       onChange={(e) =>
                         handleOperatingHoursChange(day, "close", e.target.value)
                       }
-                      className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900"
+                      className="w-auto px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#013e7f] focus:border-[#013e7f] text-gray-900 min-h-[44px]"
                     />
                   </div>
                 ) : (
@@ -339,18 +391,18 @@ const AddHospital: React.FC = () => {
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#013e7f]"
+            className="w-full sm:w-auto px-6 py-2.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#013e7f] min-h-[44px]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center px-6 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#013e7f] hover:bg-[#02326a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#013e7f] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#013e7f] hover:bg-[#02326a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#013e7f] disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
           >
             {loading ? "Creating..." : "Create Hospital"}
           </button>
