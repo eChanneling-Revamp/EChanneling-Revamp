@@ -46,7 +46,7 @@ export default function PlatformAdminDashboard() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Today's Sessions</p>
+              <p className="text-sm font-medium text-gray-600">Today&apos;s Sessions</p>
               <p className="text-2xl font-semibold text-gray-900">89</p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default function PlatformAdminDashboard() {
             <div className="flex items-center space-x-4">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm text-gray-900">New hospital "Asiri Medical City" registered</p>
+                <p className="text-sm text-gray-900">New hospital &apos;Asiri Medical City&apos; registered</p>
                 <p className="text-xs text-gray-500">2 hours ago</p>
               </div>
             </div>

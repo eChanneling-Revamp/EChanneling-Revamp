@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Activity, LayoutDashboard, Building2, Users, CalendarDays, BadgeDollarSign, UserCircle,
-  Menu, X, LogOut, Bell, Hospital, Stethoscope, FileText, Home, ClipboardList, BookOpen,
+  Menu, X, LogOut, Bell, Hospital,  FileText, Home, ClipboardList, BookOpen,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 
