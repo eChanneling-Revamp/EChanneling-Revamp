@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import ListHospitals from "@/components/hospitals/ListHospitals";
 
 export default function HospitalsPage() {
-  const router = useRouter(); // Add this
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">All Hospitals</h1>
@@ -28,17 +28,22 @@ export default function HospitalsPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Search hospitals..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1 max-w-xs px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f]"
-        />
+        <div className="relative flex-1 max-w-xs">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search hospitals..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-[#013e7f] focus:border-[#013e7f]"
+          />
+        </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f]"
+          className="px-4 py-2 border border-gray-200 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#013e7f] focus:border-[#013e7f]"
         >
           <option value="All">All Status</option>
           <option value="Active">Active</option>
@@ -47,7 +52,7 @@ export default function HospitalsPage() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#013e7f] focus:border-[#013e7f]"
+          className="px-4 py-2 border border-gray-200 rounded-md text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-[#013e7f] focus:border-[#013e7f]"
         >
           <option value="All">All Types</option>
           <option value="Private General Hospital">Private General</option>
