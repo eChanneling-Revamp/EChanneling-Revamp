@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Activity, LayoutDashboard, Building2, Users, CalendarDays, BadgeDollarSign, UserCircle,
   Menu, X, LogOut, Bell, Hospital, Stethoscope, FileText, Home, ClipboardList, BookOpen,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 // --- Menu Definitions for each role ---
@@ -44,22 +45,15 @@ const patientMenu = [
   { title: 'My Profile', icon: <UserCircle className="w-5 h-5" />, path: '/profile' },
 ];
 
-// --- Dashboard Switcher for Top Bar ---
-const dashboardSwitch = [
-  { label: "Platform Admin", path: "/admin/dashboard", roles: ["admin"] },
-  { label: "Hospital Admin", path: "/hospital/dashboard", roles: ["hospital"] },
-  { label: "Doctor", path: "/doctor/dashboard", roles: ["doctor"] },
-  { label: "Patient", path: "/user/dashboard", roles: ["user"] },
-];
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeRole, setActiveRole] = useState('admin'); // Track active role
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeRole, setActiveRole] = useState('admin');
   const pathname = usePathname();
   const router = useRouter();
 
   // Set menu items based on active role
-  let menuItems = platformAdminMenu; // Default to admin menu
+  let menuItems = platformAdminMenu;
   if (activeRole === 'hospital') menuItems = hospitalAdminMenu;
   else if (activeRole === 'doctor') menuItems = doctorMenu;
   else if (activeRole === 'user') menuItems = patientMenu;
@@ -68,51 +62,85 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleDashboardSwitch = (role: string, path: string) => {
     setActiveRole(role);
     router.push(path);
-    setSidebarOpen(false); // Close mobile sidebar after navigation
+    setSidebarOpen(false);
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Sidebar - update to use activeRole's menu items */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#013e7f] text-white transform ${
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 bg-[#013e7f] text-white transform ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0 transition-transform duration-200 ease-in-out`}>
+      } lg:translate-x-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-blue-800 flex items-center gap-3">
-            <Activity className="h-8 w-8" />
-            <span className="text-xl font-bold">eChanneling</span>
+          {/* Header */}
+          <div className="h-16 border-b border-blue-800 flex items-center px-4 relative overflow-hidden">
+            <div className="flex items-center gap-3 transition-all duration-300">
+              <Activity className={`h-8 w-8 flex-shrink-0 transition-all duration-300 ${
+                sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100'
+              }`} />
+              <span className={`text-xl font-bold whitespace-nowrap transition-all duration-300 ${
+                sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'
+              }`}>
+                eChanneling
+              </span>
+            </div>
+            <button 
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="absolute right-2 p-6 rounded-lg hover:bg-white/10 transition-all duration-200 hidden lg:block"
+            >
+              {sidebarCollapsed ? 
+                <ChevronRight className="h-5 w-5" /> : 
+                <ChevronLeft className="h-5 w-5" />
+              }
+            </button>
           </div>
-          <nav className="flex-1 p-4 space-y-1">
+
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {menuItems.map(item => (
               <Link
                 key={item.path}
                 href={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                   pathname === item.path
                     ? 'bg-white/10 text-white'
                     : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
+                } ${sidebarCollapsed ? 'justify-center' : ''}`}
+                title={sidebarCollapsed ? item.title : ''}
               >
-                {item.icon}
-                <span>{item.title}</span>
+                <span className="flex-shrink-0">{item.icon}</span>
+                <span className={`whitespace-nowrap transition-all duration-300 ${
+                  sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'
+                }`}>
+                  {item.title}
+                </span>
               </Link>
             ))}
           </nav>
+
+          {/* Footer */}
           <div className="p-4 border-t border-blue-800">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center gap-3 px-4 py-3 w-full text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className={`flex items-center gap-3 px-4 py-3 w-full text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200 ${
+                sidebarCollapsed ? 'justify-center' : ''
+              }`}
+              title={sidebarCollapsed ? 'Exit Dashboard' : ''}
             >
-              <LogOut className="w-5 h-5" />
-              <span>Exit Dashboard</span>
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <span className={`whitespace-nowrap transition-all duration-300 ${
+                sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'
+              }`}>
+                Exit Dashboard
+              </span>
             </button>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="lg:pl-64">
-        {/* Top Navigation - update with role switcher */}
+      <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
+        {/* Top Navigation */}
         <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
           <div className="flex items-center justify-between px-4 py-3">
             <button
@@ -123,7 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
             <div className="flex items-center gap-4 ml-auto">
               {/* Dashboard Switcher Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button 
                   onClick={() => handleDashboardSwitch('admin', '/admin/dashboard')}
                   className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
@@ -188,6 +216,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Page Content */}
         <main className="p-4">{children}</main>
       </div>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
