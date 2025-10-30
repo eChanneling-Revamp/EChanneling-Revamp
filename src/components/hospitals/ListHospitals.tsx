@@ -89,98 +89,115 @@ export default function ListHospitals({ searchQuery, statusFilter, typeFilter }:
   };
 
   if (loading) {
-    return <div className="flex justify-center py-8">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center py-12 bg-white rounded-lg border border-gray-200">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#013e7f] mx-auto"></div>
+          <p className="mt-4 text-sm text-gray-600">Loading hospitals...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500 py-4">{error}</div>;
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-sm text-red-700">{error}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="overflow-x-auto bg-white rounded-lg shadow-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Hospital Info
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Contact Details
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Staff Count
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredHospitals.map((hospital) => (
-            <tr key={hospital._id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 bg-[#013e7f] text-white rounded-lg flex items-center justify-center">
-                    {hospital.name[0]}
-                  </div>
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">{hospital.name}</div>
-                    <div className="text-sm text-gray-500">Reg: {hospital.registrationNumber}</div>
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">{hospital.contactNumber}</div>
-                <div className="text-sm text-gray-500">{hospital.email}</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">15 Doctors</div>
-                <div className="text-sm text-gray-500">3 Admin Staff</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  hospital.isActive 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-red-100 text-red-800"
-                }`}>
-                  {hospital.isActive ? "Active" : "Inactive"}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div className="flex items-center space-x-4">
-                  <button 
-                    onClick={() => router.push(`/admin/hospitals/${hospital._id}`)}
-                    className="text-gray-600 hover:text-[#013e7f]"
-                    title="View Details"
-                  >
-                    <Eye className="w-5 h-5" />
-                  </button>
-                  <button 
-                    onClick={() => router.push(`/admin/hospitals/${hospital._id}/edit`)}
-                    className="text-gray-600 hover:text-[#013e7f]"
-                    title="Edit"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(hospital._id)}
-                    className="text-gray-600 hover:text-red-600"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </td>
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Hospital Info
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contact Details
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Staff Count
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredHospitals.map((hospital) => (
+              <tr key={hospital._id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-12 w-12 bg-[#013e7f] text-white rounded-lg flex items-center justify-center font-semibold text-lg">
+                      {hospital.name[0]}
+                    </div>
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">{hospital.name}</div>
+                      <div className="text-sm text-gray-500">Reg: {hospital.registrationNumber}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{hospital.contactNumber}</div>
+                  <div className="text-sm text-gray-500">{hospital.email}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">15 Doctors</div>
+                  <div className="text-sm text-gray-500">3 Admin Staff</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                    hospital.isActive 
+                      ? "bg-green-100 text-green-800" 
+                      : "bg-red-100 text-red-800"
+                  }`}>
+                    {hospital.isActive ? "Active" : "Inactive"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => router.push(`/admin/hospitals/${hospital._id}`)}
+                      className="text-gray-500 hover:text-[#013e7f] transition-colors"
+                      title="View Details"
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => router.push(`/admin/hospitals/${hospital._id}/edit`)}
+                      className="text-gray-500 hover:text-[#013e7f] transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(hospital._id)}
+                      className="text-gray-500 hover:text-red-600 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {filteredHospitals.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No hospitals found
+        <div className="text-center py-12 px-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+            <Eye className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-sm font-medium text-gray-900 mb-1">No hospitals found</h3>
+          <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
         </div>
       )}
     </div>
