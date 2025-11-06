@@ -61,6 +61,8 @@ export default function SessionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSpecialization, setFilterSpecialization] = useState("all");
   const [filterDate, setFilterDate] = useState("all");
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false); //----------------
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null); //----------------
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState({
     doctorName: "",
@@ -97,6 +99,12 @@ export default function SessionsPage() {
     } else {
       alert("Failed to cancel session!");
     }
+  };
+
+  // View session details
+  const viewSession = (session: Session) => {
+    setSelectedSession(session);
+    setIsViewDialogOpen(true);
   };
 
   // Create new session
@@ -463,6 +471,7 @@ export default function SessionsPage() {
                             variant="default"
                             size="sm"
                             className="bg-blue-200 hover:bg-blue-300 text-blue-600 cursor-pointer"
+                            onClick={() => viewSession(session)} //-----------------
                           >
                             View
                           </Button>
@@ -600,6 +609,127 @@ export default function SessionsPage() {
           </Card>
         </div>
       </div>
+
+      {/* View Session Details Dialog */}
+
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Session Details</DialogTitle>
+            <DialogDescription>
+              Complete information about this doctor session
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedSession && (
+            <div className="space-y-6 py-4">
+              <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-lg">
+                <div className="p-3 bg-blue-500 rounded-lg">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Dr. {selectedSession.doctorName}
+                  </h3>
+                  <p className="text-gray-600">
+                    {selectedSession.specialization}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-500">Date</Label>
+                  <p className="text-base font-semibold text-gray-900">
+                    {new Date(selectedSession.date).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-500">Time</Label>
+                  <p className="text-base font-semibold text-gray-900">
+                    {selectedSession.time}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-500">Room</Label>
+                  <p className="text-base font-semibold text-gray-900">
+                    {selectedSession.room || "Room 204"}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-500">
+                    Consultation Fee
+                  </Label>
+                  <p className="text-base font-semibold text-gray-900">
+                    LKR {selectedSession?.fee?.toLocaleString() || "0"}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-500">Appointments</Label>
+                  <p className="text-base font-semibold text-gray-900">
+                    {selectedSession.currentAppointments || 0} /{" "}
+                    {selectedSession.maxAppointments || 30}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-500">Status</Label>
+                  <Badge
+                    className={
+                      selectedSession.status === "active"
+                        ? "bg-green-100 text-green-700 hover:bg-green-100"
+                        : "bg-red-100 text-red-700 hover:bg-red-100"
+                    }
+                  >
+                    {selectedSession.status.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <Label className="text-xs text-gray-400">Session ID</Label>
+                <p className="text-sm text-gray-600 font-mono mt-1">
+                  {selectedSession._id}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+              className="px-6"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
