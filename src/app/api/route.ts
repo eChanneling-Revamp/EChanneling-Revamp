@@ -4,7 +4,7 @@ import {
   getAllSessions,
   cancelSession,
   deleteSession,
-} from "@/controllers/sessionController";
+} from "@/controllers/Hospital_SessionController";
 
 /**
  * POST /api/sessions  → create a session
