@@ -17,5 +17,9 @@ export default function HospitalDetailPage() {
     return <div className="p-6">Please log in to access this page.</div>;
   }
 
+  if (!id || typeof id !== "string") {
+    return <div className="p-6">Invalid hospital ID</div>;
+  }
+
   return <HospitalDetail hospitalId={id} />;
 }
