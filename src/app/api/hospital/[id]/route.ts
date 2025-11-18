@@ -1,38 +1,49 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { connectDB } from "@/lib/mongodb";
-import Hospital from "@/models/Hospital";
-import mongoose from "mongoose";
+import { prisma } from "@/lib/prisma";
 
 // GET specific hospital
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
-    
-    const { id } = params;
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid hospital ID" }, { status: 400 });
-    }
+    const { id } = await params;
 
-    const hospital = await Hospital.findById(id).select('-__v');
-    
+    const hospital = await prisma.hospital.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        city: true,
+        district: true,
+        contactNumber: true,
+        email: true,
+        website: true,
+        facilities: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
     if (!hospital) {
-      return NextResponse.json({ error: "Hospital not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Hospital not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
       message: "Hospital retrieved successfully",
-      data: hospital
+      data: hospital,
     });
   } catch (error: any) {
     console.error("Error fetching hospital:", error);
@@ -46,60 +57,82 @@ export async function GET(
 // PUT - Update hospital information
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if user has admin or hospital role
     if (!["admin", "hospital"].includes(token.role as string)) {
-      return NextResponse.json({ error: "Insufficient privileges" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Insufficient privileges" },
+        { status: 403 }
+      );
     }
 
-    await connectDB();
-    
-    const { id } = params;
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid hospital ID" }, { status: 400 });
-    }
+    const { id } = await params;
 
     const body = await req.json();
-    const updateData = { ...body };
-    
-    // Remove fields that shouldn't be updated directly
-    delete updateData._id;
-    delete updateData.createdAt;
-    delete updateData.updatedAt;
+    const updateData: any = {};
 
-    const hospital = await Hospital.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-__v');
-    
-    if (!hospital) {
-      return NextResponse.json({ error: "Hospital not found" }, { status: 404 });
-    }
+    // Map fields appropriately
+    if (body.name) updateData.name = body.name;
+    if (body.address) updateData.address = body.address;
+    if (body.city) updateData.city = body.city;
+    if (body.district) updateData.district = body.district;
+    if (body.contactNumber) updateData.contactNumber = body.contactNumber;
+    if (body.email) updateData.email = body.email;
+    if (body.website) updateData.website = body.website;
+    if (body.facilities) updateData.facilities = body.facilities;
+    if (body.isActive !== undefined) updateData.isActive = body.isActive;
+
+    const hospital = await prisma.hospital.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        city: true,
+        district: true,
+        contactNumber: true,
+        email: true,
+        website: true,
+        facilities: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
     return NextResponse.json({
       message: "Hospital updated successfully",
-      data: hospital
+      data: hospital,
     });
   } catch (error: any) {
     console.error("Error updating hospital:", error);
-    
-    if (error.code === 11000) {
+
+    if (error.code === "P2002") {
       return NextResponse.json(
-        { error: "Hospital with this registration number, email, or tax ID already exists" },
+        {
+          error:
+            "Hospital with this registration number, email, or tax ID already exists",
+        },
         { status: 409 }
       );
     }
-    
+
+    if (error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Hospital not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -110,39 +143,42 @@ export async function PUT(
 // DELETE hospital
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
+
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Only admin can delete hospitals
     if (token.role !== "admin") {
-      return NextResponse.json({ error: "Insufficient privileges" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Insufficient privileges" },
+        { status: 403 }
+      );
     }
 
-    await connectDB();
-    
-    const { id } = params;
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid hospital ID" }, { status: 400 });
-    }
+    const { id } = await params;
 
-    const hospital = await Hospital.findByIdAndDelete(id);
-    
-    if (!hospital) {
-      return NextResponse.json({ error: "Hospital not found" }, { status: 404 });
-    }
+    const hospital = await prisma.hospital.delete({
+      where: { id },
+    });
 
     return NextResponse.json({
-      message: "Hospital deleted successfully"
+      message: "Hospital deleted successfully",
     });
   } catch (error: any) {
     console.error("Error deleting hospital:", error);
+
+    if (error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Hospital not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

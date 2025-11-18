@@ -2,8 +2,7 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/mongodb";
-import User from "@/models/User";
+import { prisma } from "@/lib/prisma";
 
 const handler = NextAuth({
   providers: [
@@ -21,19 +20,20 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials): Promise<any> {
-        await connectDB();
+        const user = await prisma.user.findUnique({
+          where: { email: credentials?.email },
+        });
 
-        const user = await User.findOne({ email: credentials?.email });
         if (!user) throw new Error("Invalid email or password");
 
         const isValid = await bcrypt.compare(
           credentials!.password,
-          user.password
+          user.password || ""
         );
         if (!isValid) throw new Error("Invalid email or password");
 
         return {
-          id: user._id.toString(),
+          id: user.id,
           email: user.email,
           role: user.role,
           name: user.name,
@@ -44,23 +44,26 @@ const handler = NextAuth({
 
   callbacks: {
     async jwt({ token, user, account, profile }) {
-      await connectDB();
-
       // Handle Google sign-in
       if (account?.provider === "google") {
-        let existingUser = await User.findOne({ email: profile?.email });
+        let existingUser = await prisma.user.findUnique({
+          where: { email: profile?.email || "" },
+        });
 
         if (!existingUser) {
-          existingUser = await User.create({
-            name: profile?.name,
-            email: profile?.email,
-            role: "user", // default role
+          existingUser = await prisma.user.create({
+            data: {
+              name: profile?.name || "",
+              email: profile?.email || "",
+              password: "", // OAuth users don't have passwords
+              role: "AGENT", // default role
+            },
           });
         }
 
-        token.userId = existingUser._id.toString();
+        token.userId = existingUser.id;
         token.role = existingUser.role;
-        token.name = existingUser.name;
+        token.name = existingUser.name || "";
         token.email = existingUser.email;
       }
 
@@ -68,8 +71,8 @@ const handler = NextAuth({
       if (account?.provider === "credentials" && user) {
         token.userId = (user as any).id;
         token.role = (user as any).role;
-        token.name = user.name;
-        token.email = user.email;
+        token.name = user.name || "";
+        token.email = user.email || "";
       }
 
       return token;
