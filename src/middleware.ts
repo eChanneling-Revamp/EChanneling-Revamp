@@ -11,8 +11,6 @@ export default withAuth({
       if (path.startsWith("/api/admin") && token.role !== "admin") return false;
       if (path.startsWith("/api/doctor") && token.role !== "doctor")
         return false;
-      if (path.startsWith("/api/hospital") && !["admin", "hospital"].includes(token.role as string))
-        return false;
       if (path.startsWith("/api/user") && token.role !== "user") return false;
       if (path.startsWith("/api/telecomagent") && token.role !== "telecomagent")
         return false;
@@ -26,7 +24,6 @@ export const config = {
   matcher: [
     "/api/admin/:path*",
     "/api/doctor/:path*",
-    "/api/hospital/:path*",
     "/api/user/:path*",
     "/api/telecomagent/:path*",
   ],

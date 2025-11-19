@@ -8,12 +8,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id } = await params;
 
     const hospital = await prisma.hospital.findUnique({
@@ -31,6 +25,26 @@ export async function GET(
         isActive: true,
         createdAt: true,
         updatedAt: true,
+        doctors: {
+          where: {
+            isActive: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            specialization: true,
+            qualification: true,
+            experience: true,
+            consultationFee: true,
+            rating: true,
+            profileImage: true,
+            description: true,
+            languages: true,
+            availableDays: true,
+            isActive: true,
+          },
+        },
       },
     });
 
