@@ -48,9 +48,15 @@ const patientMenu = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeRole, setActiveRole] = useState('admin');
   const pathname = usePathname();
   const router = useRouter();
+
+  // Detect active role from pathname
+  const activeRole = pathname.startsWith('/admin') ? 'admin'
+    : pathname.startsWith('/hospital') ? 'hospital'
+    : pathname.startsWith('/doctor') ? 'doctor'
+    : pathname.startsWith('/user') ? 'user'
+    : 'admin';
 
   // Set menu items based on active role
   let menuItems = platformAdminMenu;
@@ -58,9 +64,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   else if (activeRole === 'doctor') menuItems = doctorMenu;
   else if (activeRole === 'user') menuItems = patientMenu;
 
-  // Handle dashboard switch
+  // Handle dashboard switch - navigate to the role's dashboard
   const handleDashboardSwitch = (role: string, path: string) => {
-    setActiveRole(role);
     router.push(path);
     setSidebarOpen(false);
   };

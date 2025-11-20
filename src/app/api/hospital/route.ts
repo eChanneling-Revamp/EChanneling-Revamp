@@ -5,12 +5,6 @@ import { prisma } from "@/lib/prisma";
 // GET hospital information
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     // Get all hospitals or filter based on query parameters
     const { searchParams } = new URL(req.url);
     const hospitalType = searchParams.get("type");
@@ -35,6 +29,15 @@ export async function GET(req: NextRequest) {
         isActive: true,
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            doctors: {
+              where: {
+                isActive: true,
+              },
+            },
+          },
+        },
       },
     });
 
