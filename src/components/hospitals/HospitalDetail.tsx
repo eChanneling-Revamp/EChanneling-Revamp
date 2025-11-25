@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 interface Address {
@@ -49,15 +48,21 @@ interface HospitalDetailProps {
 }
 
 const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
-  const { data: session } = useSession();
   const router = useRouter();
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editData, setEditData] = useState<Hospital | null>(null);
+  const [userRole, setUserRole] = useState<string>("");
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUserRole(userData.role || "");
+    }
+
     if (hospitalId) {
       fetchHospital();
     }
@@ -89,7 +94,7 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
   const handleSave = async () => {
     try {
       if (!editData) return;
-      
+
       setLoading(true);
       const response = await fetch(`/api/hospital/${hospitalId}`, {
         method: "PUT",
@@ -119,9 +124,11 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
     setIsEditing(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     if (!editData) return;
-    
+
     const { name, value } = e.target;
     if (name.includes("address.")) {
       const addressField = name.split(".")[1];
@@ -146,9 +153,13 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
     }
   };
 
-  const handleOperatingHoursChange = (day: string, field: string, value: boolean | string) => {
+  const handleOperatingHoursChange = (
+    day: string,
+    field: string,
+    value: boolean | string
+  ) => {
     if (!editData) return;
-    
+
     setEditData((prev) => {
       if (!prev) return null;
       return {
@@ -165,19 +176,37 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div></div>;
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="p-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">{error}</div>;
+    return (
+      <div className="p-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
+        {error}
+      </div>
+    );
   }
 
   if (!hospital) {
-    return <div className="p-6 text-center text-gray-500">Hospital not found</div>;
+    return (
+      <div className="p-6 text-center text-gray-500">Hospital not found</div>
+    );
   }
 
-  const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-  const canEdit = ["admin", "hospital"].includes(session?.user?.role as string);
+  const days = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
+  const canEdit = ["admin", "super_admin", "hospital"].includes(userRole);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -187,13 +216,24 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
             onClick={() => router.back()}
             className="text-blue-600 hover:text-blue-800 mb-2 inline-flex items-center transition"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-1"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                clipRule="evenodd"
+              />
             </svg>
             Back to Hospitals
           </button>
           <h1 className="text-3xl font-bold text-gray-800">{hospital.name}</h1>
-          <p className="text-gray-600">Registration: {hospital.registrationNumber}</p>
+          <p className="text-gray-600">
+            Registration: {hospital.registrationNumber}
+          </p>
         </div>
         {canEdit && (
           <div className="space-x-2">
@@ -203,8 +243,17 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
                   onClick={handleSave}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Save
                 </button>
@@ -212,8 +261,17 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
                   onClick={handleCancel}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-1"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Cancel
                 </button>
@@ -223,7 +281,12 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
                 onClick={handleEdit}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                 </svg>
                 Edit
@@ -237,8 +300,16 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              <svg
+                className="h-5 w-5 text-red-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
@@ -251,10 +322,14 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Information */}
         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-          <h2 className="text-xl font-semibold mb-6 text-gray-800">Basic Information</h2>
+          <h2 className="text-xl font-semibold mb-6 text-gray-800">
+            Basic Information
+          </h2>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Hospital Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Hospital Name
+              </label>
               {isEditing && editData ? (
                 <input
                   type="text"
@@ -264,15 +339,23 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
                   className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
               ) : (
-                <p className="mt-1 text-gray-900 font-medium">{hospital.name}</p>
+                <p className="mt-1 text-gray-900 font-medium">
+                  {hospital.name}
+                </p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Registration Number</label>
-              <p className="mt-1 text-gray-900">{hospital.registrationNumber}</p>
+              <label className="block text-sm font-medium text-gray-700">
+                Registration Number
+              </label>
+              <p className="mt-1 text-gray-900">
+                {hospital.registrationNumber}
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Tax ID</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Tax ID
+              </label>
               {isEditing && editData ? (
                 <input
                   type="text"
@@ -286,7 +369,9 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Hospital Type</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Hospital Type
+              </label>
               {isEditing && editData ? (
                 <select
                   name="hospitalType"
@@ -294,16 +379,24 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
                   onChange={handleInputChange}
                   className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 >
-                  <option value="Private General Hospital">Private General Hospital</option>
-                  <option value="Private Specialty Hospital">Private Specialty Hospital</option>
-                  <option value="Government Hospital">Government Hospital</option>
+                  <option value="Private General Hospital">
+                    Private General Hospital
+                  </option>
+                  <option value="Private Specialty Hospital">
+                    Private Specialty Hospital
+                  </option>
+                  <option value="Government Hospital">
+                    Government Hospital
+                  </option>
                 </select>
               ) : (
                 <p className="mt-1 text-gray-900">{hospital.hospitalType}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Status</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Status
+              </label>
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                   hospital.isActive
@@ -319,10 +412,14 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
 
         {/* Contact Information */}
         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-          <h2 className="text-xl font-semibold mb-6 text-gray-800">Contact Information</h2>
+          <h2 className="text-xl font-semibold mb-6 text-gray-800">
+            Contact Information
+          </h2>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
               {isEditing && editData ? (
                 <input
                   type="tel"
@@ -336,7 +433,9 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
               {isEditing && editData ? (
                 <input
                   type="email"
@@ -350,7 +449,9 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Address</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Address
+              </label>
               {isEditing && editData ? (
                 <div className="mt-1 space-y-3">
                   <input
@@ -401,7 +502,10 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
               ) : (
                 <div className="mt-1 text-gray-900">
                   <p>{hospital.address.street}</p>
-                  <p>{hospital.address.city}, {hospital.address.state} {hospital.address.zipCode}</p>
+                  <p>
+                    {hospital.address.city}, {hospital.address.state}{" "}
+                    {hospital.address.zipCode}
+                  </p>
                   <p>{hospital.address.country}</p>
                 </div>
               )}
@@ -411,18 +515,29 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
 
         {/* Operating Hours */}
         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 lg:col-span-2">
-          <h2 className="text-xl font-semibold mb-6 text-gray-800">Operating Hours</h2>
+          <h2 className="text-xl font-semibold mb-6 text-gray-800">
+            Operating Hours
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {days.map((day) => (
-              <div key={day} className="border border-gray-200 rounded-lg p-4 transition-shadow hover:shadow-md">
+              <div
+                key={day}
+                className="border border-gray-200 rounded-lg p-4 transition-shadow hover:shadow-md"
+              >
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium capitalize text-gray-800">{day}</span>
+                  <span className="font-medium capitalize text-gray-800">
+                    {day}
+                  </span>
                   {isEditing && editData ? (
                     <input
                       type="checkbox"
                       checked={editData.operatingHours[day].isOpen}
                       onChange={(e) =>
-                        handleOperatingHoursChange(day, "isOpen", e.target.checked)
+                        handleOperatingHoursChange(
+                          day,
+                          "isOpen",
+                          e.target.checked
+                        )
                       }
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
@@ -438,28 +553,42 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
                     </span>
                   )}
                 </div>
-                {(isEditing && editData ? editData.operatingHours[day].isOpen : hospital.operatingHours[day].isOpen) && (
+                {(isEditing && editData
+                  ? editData.operatingHours[day].isOpen
+                  : hospital.operatingHours[day].isOpen) && (
                   <div className="text-sm text-gray-700">
                     {isEditing && editData ? (
                       <div className="space-y-2">
                         <div className="flex items-center">
-                          <span className="w-12 text-xs text-gray-500">Open:</span>
+                          <span className="w-12 text-xs text-gray-500">
+                            Open:
+                          </span>
                           <input
                             type="time"
                             value={editData.operatingHours[day].open}
                             onChange={(e) =>
-                              handleOperatingHoursChange(day, "open", e.target.value)
+                              handleOperatingHoursChange(
+                                day,
+                                "open",
+                                e.target.value
+                              )
                             }
                             className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           />
                         </div>
                         <div className="flex items-center">
-                          <span className="w-12 text-xs text-gray-500">Close:</span>
+                          <span className="w-12 text-xs text-gray-500">
+                            Close:
+                          </span>
                           <input
                             type="time"
                             value={editData.operatingHours[day].close}
                             onChange={(e) =>
-                              handleOperatingHoursChange(day, "close", e.target.value)
+                              handleOperatingHoursChange(
+                                day,
+                                "close",
+                                e.target.value
+                              )
                             }
                             className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           />
@@ -467,7 +596,8 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
                       </div>
                     ) : (
                       <p className="text-center font-medium">
-                        {hospital.operatingHours[day].open} - {hospital.operatingHours[day].close}
+                        {hospital.operatingHours[day].open} -{" "}
+                        {hospital.operatingHours[day].close}
                       </p>
                     )}
                   </div>
@@ -482,10 +612,12 @@ const HospitalDetail: React.FC<HospitalDetailProps> = ({ hospitalId }) => {
       <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
           <div>
-            <span className="font-medium">Created:</span> {new Date(hospital.createdAt).toLocaleString()}
+            <span className="font-medium">Created:</span>{" "}
+            {new Date(hospital.createdAt).toLocaleString()}
           </div>
           <div>
-            <span className="font-medium">Last Updated:</span> {new Date(hospital.updatedAt).toLocaleString()}
+            <span className="font-medium">Last Updated:</span>{" "}
+            {new Date(hospital.updatedAt).toLocaleString()}
           </div>
         </div>
       </div>
