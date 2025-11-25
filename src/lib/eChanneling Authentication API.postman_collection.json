@@ -1,0 +1,491 @@
+{
+	"info": {
+		"_postman_id": "cfa642b8-9f92-482a-a378-7d6378f12afa",
+		"name": "eChanneling Authentication API",
+		"description": "Authentication microservice for eChanneling service - Deployed on Rocky Linux",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39496171"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register New User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password@123\",\n  \"confirm_password\": \"Password@123\",\n  \"phone_number\": \"+94771234567\",\n  \"role\": \"patient\",\n  \"age\": 30,\n  \"gender\": \"male\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user with email, password, and profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Login with Email/Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"token\", jsonData.token);",
+									"        console.log(\"Token saved to collection variable\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password. Returns JWT token."
+					},
+					"response": []
+				},
+				{
+					"name": "Send OTP to Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/send-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"send-otp"
+							]
+						},
+						"description": "Send OTP to registered email for mobile login"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify OTP and Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"verify-otp"
+							]
+						},
+						"description": "Verify OTP and login. Returns JWT token."
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Request password reset. Sends OTP to email."
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password with OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\",\n  \"new_password\": \"NewPassword@123\",\n  \"confirm_password\": \"NewPassword@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Reset password using OTP verification"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "OAuth Authentication",
+			"item": [
+				{
+					"name": "Get Google Auth URL",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/google/url",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"google",
+								"url"
+							]
+						},
+						"description": "Get Google OAuth authentication URL"
+					},
+					"response": []
+				},
+				{
+					"name": "Initiate Google OAuth",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/google",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"google"
+							]
+						},
+						"description": "Initiate Google OAuth login (redirects to Google)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Azure Auth URL",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/azure/url",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"azure",
+								"url"
+							]
+						},
+						"description": "Get Azure AD OAuth authentication URL"
+					},
+					"response": []
+				},
+				{
+					"name": "Initiate Azure OAuth",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/azure",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"azure"
+							]
+						},
+						"description": "Initiate Azure AD OAuth login (redirects to Azure)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "Get Current User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						},
+						"description": "Get current authenticated user profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Current User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Smith\",\n  \"phone_number\": \"+94771234568\",\n  \"age\": 28,\n  \"gender\": \"female\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						},
+						"description": "Update current user profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Get all users (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users by Role (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/role/patient",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"role",
+								"patient"
+							]
+						},
+						"description": "Get users by role (Admin only). Roles: patient, nurse, doctor, hospital, admin, super_admin"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Statistics (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/statistics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"statistics"
+							]
+						},
+						"description": "Get user statistics (Admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Documentation",
+			"item": [
+				{
+					"name": "Get Swagger UI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/docs",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"docs"
+							]
+						},
+						"description": "Access Swagger UI documentation"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Swagger JSON Spec",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/docs-json",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"docs-json"
+							]
+						},
+						"description": "Get OpenAPI/Swagger JSON specification"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://124.43.216.136:8645/auth/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
