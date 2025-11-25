@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 export default function AddDoctorPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -16,8 +16,19 @@ export default function AddDoctorPage() {
     phoneNumber: "",
     specialization: "",
   });
-  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      router.push("/login");
+    }
+    setLoading(false);
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,13 +37,17 @@ export default function AddDoctorPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitLoading(true);
     setError("");
 
     try {
+      const token = localStorage.getItem("authToken");
       const response = await fetch("/api/hospital/doctor", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(formData),
       });
 
@@ -47,16 +62,16 @@ export default function AddDoctorPage() {
     } catch (err) {
       setError("A network error occurred.");
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
-  if (status === "loading") {
+  if (loading) {
     return <div className="p-6">Loading...</div>;
   }
 
-  if (!session || !["admin", "hospital"].includes(session.user.role)) {
-    return <div className="p-6">You do not have permission to perform this action.</div>;
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
@@ -77,15 +92,18 @@ export default function AddDoctorPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-md border border-gray-200 space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-8 rounded-xl shadow-md border border-gray-200 space-y-6"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Object.entries(formData).map(([key, value]) => (
             <div key={key}>
               <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-                {key.replace(/([A-Z])/g, ' $1')} *
+                {key.replace(/([A-Z])/g, " $1")} *
               </label>
               <input
-                type={key === 'email' ? 'email' : 'text'}
+                type={key === "email" ? "email" : "text"}
                 name={key}
                 value={value}
                 onChange={handleInputChange}
@@ -98,10 +116,10 @@ export default function AddDoctorPage() {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={loading}
+            disabled={submitLoading}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
           >
-            {loading ? "Adding..." : "Add Doctor"}
+            {submitLoading ? "Adding..." : "Add Doctor"}
           </button>
         </div>
       </form>
