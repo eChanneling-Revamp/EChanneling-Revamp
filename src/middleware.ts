@@ -1,30 +1,75 @@
-import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default withAuth({
-  callbacks: {
-    authorized: ({ token, req }) => {
-      const path = req.nextUrl.pathname;
+export function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const token =
+    request.cookies.get("authToken")?.value ||
+    request.headers.get("authorization")?.replace("Bearer ", "");
 
-      if (!token) return false; // not logged in
+  // Public paths that don't require authentication
+  const publicPaths = ["/login", "/signup", "/"];
+  if (publicPaths.includes(path)) {
+    return NextResponse.next();
+  }
 
-      // API role-based protection
-      if (path.startsWith("/api/admin") && token.role !== "admin") return false;
-      if (path.startsWith("/api/doctor") && token.role !== "doctor")
-        return false;
-      if (path.startsWith("/api/user") && token.role !== "user") return false;
-      if (path.startsWith("/api/telecomagent") && token.role !== "telecomagent")
-        return false;
+  // Check if user is authenticated
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
 
-      return true;
-    },
-  },
-});
+  // Get user data from cookie
+  const userCookie = request.cookies.get("user")?.value;
+  let userRole = null;
+
+  if (userCookie) {
+    try {
+      const userData = JSON.parse(userCookie);
+      userRole = userData.role?.toLowerCase();
+    } catch (error) {
+      console.error("Error parsing user cookie:", error);
+    }
+  }
+
+  // Role-based access control
+  const roleRoutes: Record<string, string[]> = {
+    admin: ["/admin"],
+    super_admin: ["/admin"],
+    doctor: ["/doctor"],
+    hospital: ["/hospital"],
+    nurse: ["/user"],
+    patient: ["/user"],
+    user: ["/user"],
+  };
+
+  // Check if user has access to the requested path
+  if (userRole && roleRoutes[userRole]) {
+    const allowedPaths = roleRoutes[userRole];
+    const hasAccess = allowedPaths.some((allowedPath) =>
+      path.startsWith(allowedPath)
+    );
+
+    if (
+      !hasAccess &&
+      !path.startsWith("/dashboard") &&
+      !path.startsWith("/staff")
+    ) {
+      // Redirect to appropriate dashboard based on role
+      const redirectPath = allowedPaths[0] + "/dashboard";
+      return NextResponse.redirect(new URL(redirectPath, request.url));
+    }
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    "/api/admin/:path*",
-    "/api/doctor/:path*",
-    "/api/user/:path*",
-    "/api/telecomagent/:path*",
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/doctor/:path*",
+    "/user/:path*",
+    "/hospital/:path*",
+    "/staff/:path*",
   ],
 };
