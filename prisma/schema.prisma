@@ -90,6 +90,25 @@ model Doctor {
   @@map("doctors")
 }
 
+model Nurse_Detail {
+  id              String        @id @default(cuid())
+  name            String
+  email           String        @unique
+  experience      Int
+  phonenumber     String
+  profileImage    String?
+  availableDays   String[]
+  isActive        Boolean       @default(true)
+  hospitalId      String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  appointments    Appointment[]
+  hospitals       Hospital      @relation(fields: [hospitalId], references: [id])
+  sessions        Session[]
+
+  @@map("nurse_details")
+}
+
 model Hospital {
   id            String        @id @default(cuid())
   name          String
@@ -97,7 +116,7 @@ model Hospital {
   city          String
   district      String
   contactNumber String
-  email         String
+  email         String        @unique
   website       String?
   facilities    String[]
   isActive      Boolean       @default(true)
@@ -106,27 +125,30 @@ model Hospital {
   appointments  Appointment[]
   doctors       Doctor[]
   nurses        Nurse[]
+  nurse_details Nurse_Detail[]
   sessions      Session[]
 
   @@map("hospitals")
 }
 
 model Session {
-  id         String    @id @default(cuid())
-  doctorId   String
-  doctorName String
-  nurseId    String
-  nurseName  String?
-  capacity   Int?      @default(20)
-  location   String?
-  hospitalId String
-  status     String?   @default("scheduled")
-  createdAt  DateTime? @default(now()) @db.Timestamp(6)
-  startTime  DateTime? @db.Timestamp(6)
-  endTime    DateTime? @db.Timestamp(6)
-  doctors    Doctor    @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorId")
-  hospitals  Hospital  @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
-  nurses     Nurse     @relation(fields: [nurseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "nurseId")
+  id              String        @id @default(cuid())
+  doctorId        String
+  doctorName      String
+  nurseId         String
+  nurseName       String?
+  nurseDetailId   String?
+  capacity        Int?          @default(20)
+  location        String?
+  hospitalId      String
+  status          String?       @default("scheduled")
+  createdAt       DateTime?     @default(now()) @db.Timestamp(6)
+  startTime       DateTime?     @db.Timestamp(6)
+  endTime         DateTime?     @db.Timestamp(6)
+  doctors         Doctor        @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorId")
+  hospitals       Hospital      @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
+  nurses          Nurse         @relation(fields: [nurseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "nurseId")
+  nurse_details   Nurse_Detail? @relation(fields: [nurseDetailId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("sessions")
 }
@@ -152,6 +174,7 @@ model Appointment {
   hospitalId                     String
   timeSlotId                     String
   bookedById                     String
+  nurseDetailId                  String?
   appointmentDate                DateTime                         @db.Date
   appointmentTime                DateTime                         @db.Time(6)
   estimatedWaitTime              Int?
@@ -168,6 +191,7 @@ model Appointment {
   users                          User                             @relation(fields: [bookedById], references: [id])
   doctor                         Doctor                           @relation(fields: [doctorId], references: [id])
   hospital                       Hospital                         @relation(fields: [hospitalId], references: [id])
+  nurse_detail                   Nurse_Detail?                    @relation(fields: [nurseDetailId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   customers                      customers                        @relation(fields: [patientEmail], references: [email])
   time_slots                     time_slots                       @relation(fields: [timeSlotId], references: [id])
   corporate_package_appointments corporate_package_appointments[]

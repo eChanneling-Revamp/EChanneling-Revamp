@@ -15,10 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -51,34 +48,116 @@ interface Session {
   maxAppointments?: number;
 }
 
+interface Doctor {
+  id: string;
+  name: string;
+  email: string;
+  specialization: string;
+  consultationFee: number;
+}
+
+interface Nurse {
+  id: string;
+  name: string;
+}
+
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [nurses, setNurses] = useState<Nurse[]>([]);
+  const [hospitalId, setHospitalId] = useState("");
   const [loading, setLoading] = useState(false);
   const [filterSpecialization, setFilterSpecialization] = useState("all");
   const [filterDate, setFilterDate] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState({
+    doctorId: "",
     doctorName: "",
+    nurseId: "",
+    nurseName: "",
     specialization: "",
-    date: "",
-    time: "",
-    fee: "",
-    room: "",
-    maxAppointments: "30",
+    startTime: "",
+    endTime: "",
+    capacity: "20",
+    location: "",
+    status: "scheduled",
   });
 
   // Fetch all sessions
   const fetchSessions = async () => {
     setLoading(true);
-    const res = await fetch("/api/sessions");
-    const data = await res.json();
-    setSessions(data);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/sessions");
+      const data = await res.json();
+      // Ensure data is always an array
+      if (Array.isArray(data)) {
+        setSessions(data);
+      } else {
+        console.error("API returned non-array data:", data);
+        setSessions([]);
+      }
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchSessions();
+    fetchDoctors();
+    fetchNurses();
   }, []);
+
+  // Fetch doctors for the hospital
+  const fetchDoctors = async () => {
+    try {
+      // Get hospital data from localStorage
+      const userDataStr = localStorage.getItem("user");
+      if (!userDataStr) return;
+
+      const userData = JSON.parse(userDataStr);
+
+      // Fetch hospital ID
+      const hospitalResponse = await fetch(
+        `/api/hospital/check?email=${userData.email}`
+      );
+      const hospitalData = await hospitalResponse.json();
+
+      if (hospitalData.exists && hospitalData.data) {
+        const hospitalId = hospitalData.data.id;
+        setHospitalId(hospitalId);
+
+        // Fetch doctors for this hospital
+        const doctorsResponse = await fetch(
+          `/api/hospital/doctor?hospitalId=${hospitalId}`
+        );
+        const doctorsData = await doctorsResponse.json();
+
+        if (doctorsData.data && Array.isArray(doctorsData.data)) {
+          setDoctors(doctorsData.data);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+    }
+  };
+
+  // Fetch nurses for the hospital (placeholder - you'll need to create this API)
+  const fetchNurses = async () => {
+    try {
+      // TODO: Implement nurse API endpoint similar to doctors
+      // For now, using mock data
+      setNurses([
+        { id: "nurse1", name: "Sarah Johnson" },
+        { id: "nurse2", name: "Michael Chen" },
+        { id: "nurse3", name: "Emily Davis" },
+      ]);
+    } catch (error) {
+      console.error("Error fetching nurses:", error);
+    }
+  };
 
   // Cancel session
   const cancelSession = async (id: string) => {
@@ -97,45 +176,51 @@ export default function SessionsPage() {
   // Create new session
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.doctorName ||
-      !form.specialization ||
-      !form.date ||
-      !form.time ||
-      !form.fee
-    ) {
+    if (!form.doctorId || !form.nurseId || !form.startTime || !form.endTime) {
       alert("Please fill all required fields");
       return;
     }
+
+    if (!hospitalId) {
+      alert("Hospital information not found");
+      return;
+    }
+
     const res = await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        doctorId: form.doctorId,
         doctorName: form.doctorName,
-        specialization: form.specialization,
-        date: form.date,
-        time: form.time,
-        fee: parseFloat(form.fee),
-        room: form.room || "Room 204",
-        maxAppointments: parseInt(form.maxAppointments) || 30,
-        currentAppointments: 0,
+        nurseId: form.nurseId,
+        nurseName: form.nurseName,
+        hospitalId: hospitalId,
+        startTime: new Date(form.startTime).toISOString(),
+        endTime: new Date(form.endTime).toISOString(),
+        capacity: parseInt(form.capacity) || 20,
+        location: form.location || null,
+        status: form.status || "scheduled",
       }),
     });
     if (res.ok) {
       alert("Session created successfully!");
       setForm({
+        doctorId: "",
         doctorName: "",
+        nurseId: "",
+        nurseName: "",
         specialization: "",
-        date: "",
-        time: "",
-        fee: "",
-        room: "",
-        maxAppointments: "30",
+        startTime: "",
+        endTime: "",
+        capacity: "20",
+        location: "",
+        status: "scheduled",
       });
       setIsDialogOpen(false);
       fetchSessions();
     } else {
-      alert("Error creating session!");
+      const errorData = await res.json();
+      alert(`Error creating session: ${errorData.message || "Unknown error"}`);
     }
   };
 
@@ -229,103 +314,175 @@ export default function SessionsPage() {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div className="grid grid-cols-2 gap-5">
+                        {/* Doctor Selection */}
                         <div className="space-y-4">
-                          <Label htmlFor="doctorName">Doctor Name *</Label>
-                          <Input
-                            id="doctorName"
-                            type="text"
-                            placeholder="Enter doctor name"
-                            value={form.doctorName}
-                            onChange={(e) =>
-                              setForm({ ...form, doctorName: e.target.value })
-                            }
-                            required
-                          />
+                          <Label htmlFor="doctorId">Doctor *</Label>
+                          <Select
+                            value={form.doctorId}
+                            onValueChange={(value) => {
+                              const selectedDoctor = doctors.find(
+                                (d) => d.id === value
+                              );
+                              if (selectedDoctor) {
+                                setForm({
+                                  ...form,
+                                  doctorId: value,
+                                  doctorName: selectedDoctor.name,
+                                  specialization: selectedDoctor.specialization,
+                                });
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a doctor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {doctors.length === 0 ? (
+                                <SelectItem value="no-doctors" disabled>
+                                  No doctors available
+                                </SelectItem>
+                              ) : (
+                                doctors.map((doctor) => (
+                                  <SelectItem key={doctor.id} value={doctor.id}>
+                                    Dr. {doctor.name} - {doctor.specialization}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
                         </div>
+
+                        {/* Nurse Selection */}
                         <div className="space-y-4">
-                          <Label htmlFor="specialization">
-                            Specialization *
-                          </Label>
+                          <Label htmlFor="nurseId">Nurse *</Label>
+                          <Select
+                            value={form.nurseId}
+                            onValueChange={(value) => {
+                              const selectedNurse = nurses.find(
+                                (n) => n.id === value
+                              );
+                              if (selectedNurse) {
+                                setForm({
+                                  ...form,
+                                  nurseId: value,
+                                  nurseName: selectedNurse.name,
+                                });
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a nurse" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {nurses.length === 0 ? (
+                                <SelectItem value="no-nurses" disabled>
+                                  No nurses available
+                                </SelectItem>
+                              ) : (
+                                nurses.map((nurse) => (
+                                  <SelectItem key={nurse.id} value={nurse.id}>
+                                    {nurse.name}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Specialization (Read-only) */}
+                        <div className="space-y-4">
+                          <Label htmlFor="specialization">Specialization</Label>
                           <Input
                             id="specialization"
                             type="text"
-                            placeholder="e.g., Cardiology"
                             value={form.specialization}
+                            readOnly
+                            className="bg-gray-50"
+                            placeholder="Auto-filled from doctor"
+                          />
+                        </div>
+
+                        {/* Start Time */}
+                        <div className="space-y-4">
+                          <Label htmlFor="startTime">Start Time *</Label>
+                          <Input
+                            id="startTime"
+                            type="datetime-local"
+                            value={form.startTime}
                             onChange={(e) =>
-                              setForm({
-                                ...form,
-                                specialization: e.target.value,
-                              })
+                              setForm({ ...form, startTime: e.target.value })
                             }
                             required
                           />
                         </div>
+
+                        {/* End Time */}
                         <div className="space-y-4">
-                          <Label htmlFor="date">Date *</Label>
+                          <Label htmlFor="endTime">End Time *</Label>
                           <Input
-                            id="date"
-                            type="date"
-                            value={form.date}
+                            id="endTime"
+                            type="datetime-local"
+                            value={form.endTime}
                             onChange={(e) =>
-                              setForm({ ...form, date: e.target.value })
+                              setForm({ ...form, endTime: e.target.value })
                             }
                             required
                           />
                         </div>
+
+                        {/* Capacity */}
                         <div className="space-y-4">
-                          <Label htmlFor="time">Time *</Label>
+                          <Label htmlFor="capacity">Capacity</Label>
                           <Input
-                            id="time"
-                            type="text"
-                            placeholder="e.g., 09:00 AM - 12:00 PM"
-                            value={form.time}
-                            onChange={(e) =>
-                              setForm({ ...form, time: e.target.value })
-                            }
-                            required
-                          />
-                        </div>
-                        <div className="space-y-4">
-                          <Label htmlFor="fee">Fee (LKR) *</Label>
-                          <Input
-                            id="fee"
+                            id="capacity"
                             type="number"
-                            placeholder="Enter consultation fee"
-                            value={form.fee}
+                            placeholder="20"
+                            value={form.capacity}
                             onChange={(e) =>
-                              setForm({ ...form, fee: e.target.value })
+                              setForm({ ...form, capacity: e.target.value })
                             }
-                            required
                           />
                         </div>
+
+                        {/* Location */}
                         <div className="space-y-4">
-                          <Label htmlFor="room">Room</Label>
+                          <Label htmlFor="location">Location/Room</Label>
                           <Input
-                            id="room"
+                            id="location"
                             type="text"
-                            placeholder="e.g., Room 204"
-                            value={form.room}
+                            placeholder="e.g., Room 204, Building A"
+                            value={form.location}
                             onChange={(e) =>
-                              setForm({ ...form, room: e.target.value })
+                              setForm({ ...form, location: e.target.value })
                             }
                           />
                         </div>
+
+                        {/* Status */}
                         <div className="space-y-4">
-                          <Label htmlFor="maxAppointments">
-                            Max Appointments
-                          </Label>
-                          <Input
-                            id="maxAppointments"
-                            type="number"
-                            placeholder="30"
-                            value={form.maxAppointments}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                maxAppointments: e.target.value,
-                              })
+                          <Label htmlFor="status">Status</Label>
+                          <Select
+                            value={form.status}
+                            onValueChange={(value) =>
+                              setForm({ ...form, status: value })
                             }
-                          />
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="scheduled">
+                                Scheduled
+                              </SelectItem>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="completed">
+                                Completed
+                              </SelectItem>
+                              <SelectItem value="cancelled">
+                                Cancelled
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                       <DialogFooter>
