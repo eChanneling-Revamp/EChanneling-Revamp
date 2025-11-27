@@ -385,7 +385,8 @@ export default function EditDoctorDialog({
                     htmlFor="consultationFee"
                     className="block text-sm font-semibold text-gray-700"
                   >
-                    Consultation Fee (Rs.) <span className="text-red-500">*</span>
+                    Consultation Fee (Rs.){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="consultationFee"

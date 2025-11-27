@@ -1,7 +1,14 @@
 // components/DoctorCard.tsx
 "use client";
 import React from "react";
-import { FiEdit, FiTrash2, FiMail, FiPhone, FiCalendar, FiAward } from "react-icons/fi";
+import {
+  FiEdit,
+  FiTrash2,
+  FiMail,
+  FiPhone,
+  FiCalendar,
+  FiAward,
+} from "react-icons/fi";
 
 export type Doctor = {
   id: string;
@@ -20,7 +27,11 @@ type DoctorCardProps = {
   onDelete?: (doctorId: string) => void;
 };
 
-export default function DoctorCard({ doctor, onEdit, onDelete }: DoctorCardProps) {
+export default function DoctorCard({
+  doctor,
+  onEdit,
+  onDelete,
+}: DoctorCardProps) {
   const statusConfig = {
     Active: {
       bg: "bg-emerald-50",
@@ -63,19 +74,21 @@ export default function DoctorCard({ doctor, onEdit, onDelete }: DoctorCardProps
               doctor.color ?? "bg-gradient-to-br from-blue-700 to-indigo-700"
             }`}
           >
-            <span className="text-2xl font-bold">{getInitials(doctor.name)}</span>
+            <span className="text-2xl font-bold">
+              {getInitials(doctor.name)}
+            </span>
           </div>
         </div>
-        
+
         {/* Action buttons */}
         <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button 
+          <button
             onClick={() => onEdit?.(doctor)}
             className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white shadow-md text-blue-600 hover:text-blue-700 transition-all"
           >
             <FiEdit className="w-4 h-4" />
           </button>
-          <button 
+          <button
             onClick={() => onDelete?.(doctor.id)}
             className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white shadow-md text-red-500 hover:text-red-600 transition-all"
           >
@@ -129,8 +142,12 @@ export default function DoctorCard({ doctor, onEdit, onDelete }: DoctorCardProps
               <FiCalendar className="w-3.5 h-3.5 text-purple-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500 font-medium mb-0.5">Available Days</p>
-              <p className="text-sm text-gray-900 line-clamp-2">{doctor.sessions}</p>
+              <p className="text-xs text-gray-500 font-medium mb-0.5">
+                Available Days
+              </p>
+              <p className="text-sm text-gray-900 line-clamp-2">
+                {doctor.sessions}
+              </p>
             </div>
           </div>
         </div>
@@ -140,7 +157,9 @@ export default function DoctorCard({ doctor, onEdit, onDelete }: DoctorCardProps
           <div
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${config.bg} ${config.border} border`}
           >
-            <span className={`w-2 h-2 rounded-full ${config.dot} animate-pulse`}></span>
+            <span
+              className={`w-2 h-2 rounded-full ${config.dot} animate-pulse`}
+            ></span>
             <span className={`text-xs font-semibold ${config.text}`}>
               {doctor.status}
             </span>

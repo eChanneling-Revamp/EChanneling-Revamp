@@ -68,10 +68,7 @@ export async function PUT(
     });
 
     if (!existingDoctor) {
-      return NextResponse.json(
-        { error: "Doctor not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
     }
 
     if (existingDoctor.hospitals.email !== userEmail) {
@@ -193,10 +190,7 @@ export async function DELETE(
     });
 
     if (!existingDoctor) {
-      return NextResponse.json(
-        { error: "Doctor not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
     }
 
     if (existingDoctor.hospitals.email !== userEmail) {
