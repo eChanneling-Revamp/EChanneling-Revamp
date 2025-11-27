@@ -13,6 +13,26 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow hospital setup route for authenticated hospital users
+  if (path === "/hospital/setup") {
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    // Only hospital role users can access setup page
+    const userCookie = request.cookies.get("user")?.value;
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(userCookie);
+        if (userData.role?.toLowerCase() === "hospital") {
+          return NextResponse.next();
+        }
+      } catch (error) {
+        console.error("Error parsing user cookie:", error);
+      }
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   // Check if user is authenticated
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
