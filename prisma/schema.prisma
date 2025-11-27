@@ -71,6 +71,7 @@ model Doctor {
   specialization  String
   qualification   String
   experience      Int
+  phonenumber     String
   consultationFee Decimal       @db.Decimal(10, 2)
   rating          Decimal?      @db.Decimal(3, 2)
   profileImage    String?
