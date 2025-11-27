@@ -137,7 +137,7 @@ export function SignupForm() {
     try {
       // Verify OTP using external API
       const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
-        email: formData.email,
+        phone_number: formData.phoneNumber,
         otp: otp,
       });
 
@@ -167,7 +167,7 @@ export function SignupForm() {
 
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/send-otp`, {
-        email: formData.email,
+        phone_number: formData.phoneNumber,
       });
 
       console.log("OTP resent:", response.data);

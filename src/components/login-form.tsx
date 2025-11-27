@@ -59,6 +59,7 @@ export function LoginForm() {
 
         // Navigate based on user role
         const userRole = response.data.user?.role || response.data.role;
+        const userEmail = response.data.user?.email || email;
         console.log("User role:", userRole);
         let dashboardPath = "/dashboard";
 
@@ -72,7 +73,20 @@ export function LoginForm() {
               dashboardPath = "/doctor/dashboard";
               break;
             case "hospital":
-              dashboardPath = "/hospital/dashboard";
+              // Check if hospital data exists
+              try {
+                const checkResponse = await axios.get(
+                  `/api/hospital/check?email=${userEmail}`
+                );
+                if (checkResponse.data.exists) {
+                  dashboardPath = "/hospital/dashboard";
+                } else {
+                  dashboardPath = "/hospital/setup";
+                }
+              } catch (error) {
+                console.error("Error checking hospital data:", error);
+                dashboardPath = "/hospital/setup";
+              }
               break;
             case "nurse":
             case "patient":
@@ -146,6 +160,7 @@ export function LoginForm() {
 
       // Navigate based on user role
       const userRole = response.data.user?.role || response.data.role;
+      const userEmail = response.data.user?.email || response.data.email;
       console.log("User role:", userRole);
       let dashboardPath = "/dashboard";
 
@@ -159,7 +174,20 @@ export function LoginForm() {
             dashboardPath = "/doctor/dashboard";
             break;
           case "hospital":
-            dashboardPath = "/hospital/dashboard";
+            // Check if hospital data exists
+            try {
+              const checkResponse = await axios.get(
+                `/api/hospital/check?email=${userEmail}`
+              );
+              if (checkResponse.data.exists) {
+                dashboardPath = "/hospital/dashboard";
+              } else {
+                dashboardPath = "/hospital/setup";
+              }
+            } catch (error) {
+              console.error("Error checking hospital data:", error);
+              dashboardPath = "/hospital/setup";
+            }
             break;
           case "nurse":
           case "patient":
