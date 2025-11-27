@@ -1,5 +1,4 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
 // GET specific hospital
@@ -74,14 +73,30 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    // Get token from cookies
+    const token = req.cookies.get("authToken")?.value;
 
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get user data from cookies
+    const userCookie = req.cookies.get("user")?.value;
+    let userRole = null;
+    let userEmail = null;
+
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(userCookie);
+        userRole = userData.role?.toLowerCase();
+        userEmail = userData.email;
+      } catch (error) {
+        console.error("Error parsing user cookie:", error);
+      }
+    }
+
     // Check if user has admin or hospital role
-    if (!["admin", "hospital"].includes(token.role as string)) {
+    if (!["admin", "hospital"].includes(userRole || "")) {
       return NextResponse.json(
         { error: "Insufficient privileges" },
         { status: 403 }
@@ -89,6 +104,21 @@ export async function PUT(
     }
 
     const { id } = await params;
+
+    // If user is hospital role, verify they own this hospital
+    if (userRole === "hospital") {
+      const existingHospital = await prisma.hospital.findUnique({
+        where: { id },
+        select: { email: true },
+      });
+
+      if (!existingHospital || existingHospital.email !== userEmail) {
+        return NextResponse.json(
+          { error: "You can only update your own hospital profile" },
+          { status: 403 }
+        );
+      }
+    }
 
     const body = await req.json();
     const updateData: any = {};
@@ -160,14 +190,28 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    // Get token from cookies
+    const token = req.cookies.get("authToken")?.value;
 
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get user data from cookies
+    const userCookie = req.cookies.get("user")?.value;
+    let userRole = null;
+
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(userCookie);
+        userRole = userData.role?.toLowerCase();
+      } catch (error) {
+        console.error("Error parsing user cookie:", error);
+      }
+    }
+
     // Only admin can delete hospitals
-    if (token.role !== "admin") {
+    if (userRole !== "admin") {
       return NextResponse.json(
         { error: "Insufficient privileges" },
         { status: 403 }

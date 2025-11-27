@@ -1,5 +1,4 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
 // GET hospital information
@@ -58,16 +57,33 @@ export async function GET(req: NextRequest) {
 // POST - Create new hospital
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    // Get token from cookies
+    const token = req.cookies.get("authToken")?.value;
 
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user has admin or hospital role
-    if (!["admin", "hospital"].includes(token.role as string)) {
+    // Get user data from cookies
+    const userCookie = req.cookies.get("user")?.value;
+    let userRole = null;
+
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(userCookie);
+        userRole = userData.role?.toLowerCase();
+      } catch (error) {
+        console.error("Error parsing user cookie:", error);
+      }
+    }
+
+    // Check if user has hospital role
+    if (userRole !== "hospital") {
       return NextResponse.json(
-        { error: "Insufficient privileges" },
+        {
+          error:
+            "Insufficient privileges. Only hospital users can create hospital profiles.",
+        },
         { status: 403 }
       );
     }
@@ -131,8 +147,18 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("Error creating hospital:", error);
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    });
+    
+    // Return more specific error message
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: error.message || "Failed to create hospital"
+      },
       { status: 500 }
     );
   }
