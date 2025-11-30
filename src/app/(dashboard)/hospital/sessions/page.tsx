@@ -1,6 +1,8 @@
 "use client";
 import { Search, Eye, Edit2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useHospitalStatus } from "@/hooks/useHospitalStatus";
+import PendingApprovalScreen from "@/components/hospital/PendingApprovalScreen";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,
@@ -65,6 +67,8 @@ interface Nurse {
 }
 
 export default function SessionsPage() {
+  const { status: hospitalStatus, isLoading: statusLoading } =
+    useHospitalStatus();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [nurses, setNurses] = useState<Nurse[]>([]);
@@ -454,6 +458,23 @@ export default function SessionsPage() {
 
     return true;
   });
+
+  // Show loading while checking hospital status
+  if (statusLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show pending approval screen if hospital status is PENDING
+  if (hospitalStatus === "PENDING") {
+    return <PendingApprovalScreen />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">

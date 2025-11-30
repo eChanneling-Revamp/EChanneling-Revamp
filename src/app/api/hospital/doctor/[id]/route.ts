@@ -55,6 +55,7 @@ export async function PUT(
       languages,
       availableDays,
       isActive,
+      status,
     } = body;
 
     // Verify the doctor exists and belongs to the logged-in hospital
@@ -108,6 +109,7 @@ export async function PUT(
         languages: languages || [],
         availableDays: availableDays || [],
         isActive: isActive ?? true,
+        ...(status && { status }), // Only update status if provided
       },
     });
 

@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { useHospitalStatus } from "@/hooks/useHospitalStatus";
+import PendingApprovalScreen from "@/components/hospital/PendingApprovalScreen";
 import DoctorCard from "@/components/staff/DoctorCard";
 import NurseCard from "@/components/staff/NurseCard";
 import EditDoctorDialog from "@/components/staff/EditDoctorDialog";
@@ -24,6 +26,7 @@ interface Doctor {
   languages: string[];
   availableDays: string[];
   isActive: boolean;
+  status?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +49,8 @@ export default function HospitalStaffPage() {
   const { isAuthorized, isLoading: authLoading } = useRoleProtection({
     allowedRoles: ["hospital"],
   });
+  const { status: hospitalStatus, isLoading: statusLoading } =
+    useHospitalStatus();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [nurses, setNurses] = useState<Nurse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -239,7 +244,7 @@ export default function HospitalStaffPage() {
     return matchesQ && matchesStatus;
   });
 
-  if (authLoading || isLoading) {
+  if (authLoading || statusLoading || isLoading) {
     return (
       <div className="min-h-screen bg-[#f3f4f6] flex items-center justify-center">
         <div className="text-center">
@@ -252,6 +257,11 @@ export default function HospitalStaffPage() {
 
   if (!isAuthorized) {
     return null;
+  }
+
+  // Show pending approval screen if hospital status is PENDING
+  if (hospitalStatus === "PENDING") {
+    return <PendingApprovalScreen />;
   }
 
   return (
@@ -367,22 +377,40 @@ export default function HospitalStaffPage() {
             <>
               {filtered.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filtered.map((d) => (
-                    <DoctorCard
-                      key={d.id}
-                      doctor={{
-                        id: d.id,
-                        name: d.name,
-                        email: d.email,
-                        specialty: d.specialization,
-                        phone: d.phonenumber || "Not provided",
-                        sessions: d.availableDays.join(", ") || "Not set",
-                        status: d.isActive ? "Active" : "Inactive",
-                      }}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                    />
-                  ))}
+                  {filtered.map((d) => {
+                    // Map database status to display status
+                    let displayStatus:
+                      | "PENDING"
+                      | "APPROVED"
+                      | "REJECTED"
+                      | "SUSPENDED"
+                      | "Active"
+                      | "Inactive" = "PENDING";
+                    if (d.status) {
+                      displayStatus = d.status as any;
+                    } else if (d.isActive) {
+                      displayStatus = "Active";
+                    } else {
+                      displayStatus = "Inactive";
+                    }
+
+                    return (
+                      <DoctorCard
+                        key={d.id}
+                        doctor={{
+                          id: d.id,
+                          name: d.name,
+                          email: d.email,
+                          specialty: d.specialization,
+                          phone: d.phonenumber || "Not provided",
+                          sessions: d.availableDays.join(", ") || "Not set",
+                          status: displayStatus,
+                        }}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">

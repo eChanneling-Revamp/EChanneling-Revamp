@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { useHospitalStatus } from "@/hooks/useHospitalStatus";
+import PendingApprovalScreen from "@/components/hospital/PendingApprovalScreen";
 import {
   User,
   Mail,
@@ -60,6 +62,8 @@ export default function AddStaffPage() {
   const { isAuthorized, isLoading: authLoading } = useRoleProtection({
     allowedRoles: ["hospital"],
   });
+  const { status: hospitalStatus, isLoading: statusLoading } =
+    useHospitalStatus();
   const [hospitalId, setHospitalId] = useState("");
   const [activeTab, setActiveTab] = useState<"doctor" | "nurse">("doctor");
   const [doctorFormData, setDoctorFormData] = useState({
@@ -251,7 +255,7 @@ export default function AddStaffPage() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || statusLoading) {
     return (
       <div className="min-h-screen bg-[#f3f4f6] flex items-center justify-center">
         <div className="text-center">
@@ -264,6 +268,11 @@ export default function AddStaffPage() {
 
   if (!isAuthorized) {
     return null;
+  }
+
+  // Show pending approval screen if hospital status is PENDING
+  if (hospitalStatus === "PENDING") {
+    return <PendingApprovalScreen />;
   }
 
   return (

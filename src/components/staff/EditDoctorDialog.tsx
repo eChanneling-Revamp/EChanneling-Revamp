@@ -29,6 +29,7 @@ interface Doctor {
   languages: string[];
   availableDays: string[];
   isActive: boolean;
+  status?: string;
 }
 
 interface EditDoctorDialogProps {
@@ -95,11 +96,26 @@ export default function EditDoctorDialog({
     languages: [] as string[],
     availableDays: [] as string[],
     isActive: true,
+    status: "PENDING" as string,
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get user role from localStorage
+    const userDataStr = localStorage.getItem("user");
+    if (userDataStr) {
+      try {
+        const userData = JSON.parse(userDataStr);
+        setUserRole(userData.role?.toLowerCase());
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (doctor) {
@@ -116,6 +132,7 @@ export default function EditDoctorDialog({
         languages: doctor.languages,
         availableDays: doctor.availableDays,
         isActive: doctor.isActive,
+        status: doctor.status || "PENDING",
       });
     }
   }, [doctor]);
@@ -148,7 +165,7 @@ export default function EditDoctorDialog({
     setSuccess("");
 
     try {
-      const updateData = {
+      const updateData: any = {
         name: formData.name,
         email: formData.email,
         phonenumber: formData.phonenumber,
@@ -162,6 +179,11 @@ export default function EditDoctorDialog({
         availableDays: formData.availableDays,
         isActive: formData.isActive,
       };
+
+      // Only include status if user is ADMIN
+      if (userRole === "admin") {
+        updateData.status = formData.status;
+      }
 
       const response = await axios.put(
         `/api/hospital/doctor/${doctor?.id}`,
@@ -501,7 +523,32 @@ export default function EditDoctorDialog({
                   </div>
                 </div>
 
-                {/* Status */}
+                {/* Status - ADMIN ONLY */}
+                {userRole === "admin" && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Doctor Status
+                    </label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    >
+                      <option value="PENDING">Pending Approval</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
+                      <option value="SUSPENDED">Suspended</option>
+                    </select>
+                    <p className="text-xs text-gray-500">
+                      PENDING: Awaiting approval | APPROVED: Active and can take
+                      appointments | REJECTED: Not approved | SUSPENDED:
+                      Temporarily disabled
+                    </p>
+                  </div>
+                )}
+
+                {/* Active Status */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input

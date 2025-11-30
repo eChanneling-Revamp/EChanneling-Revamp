@@ -79,6 +79,7 @@ model Doctor {
   languages       String[]
   availableDays   String[]
   isActive        Boolean       @default(true)
+  status          doctor_status  @default(PENDING)
   hospitalId      String
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -119,6 +120,7 @@ model Hospital {
   email         String        @unique
   website       String?
   facilities    String[]
+  status        hospital_status  @default(PENDING)
   isActive      Boolean       @default(true)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -753,4 +755,16 @@ enum UserRole {
   SUPERVISOR
   AGENT
   CORPORATE
+}
+
+enum doctor_status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum hospital_status {
+  PENDING
+  APPROVED
+  REJECTED
 }

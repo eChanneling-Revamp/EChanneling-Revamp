@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
         availableDays: availableDays || [],
         hospitalId,
         isActive: true,
+        status: "PENDING", // Default status for new doctors
       },
     });
 
@@ -177,6 +178,7 @@ export async function GET(req: NextRequest) {
         languages: true,
         availableDays: true,
         isActive: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
       },

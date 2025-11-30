@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
         website: true,
         facilities: true,
         isActive: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
       },

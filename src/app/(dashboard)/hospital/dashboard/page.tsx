@@ -2,6 +2,8 @@
 "use client";
 
 import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { useHospitalStatus } from "@/hooks/useHospitalStatus";
+import PendingApprovalScreen from "@/components/hospital/PendingApprovalScreen";
 import {
   Users,
   Calendar,
@@ -17,8 +19,10 @@ export default function HospitalAdminDashboard() {
   const { isAuthorized, isLoading } = useRoleProtection({
     allowedRoles: ["hospital"],
   });
+  const { status: hospitalStatus, isLoading: statusLoading } =
+    useHospitalStatus();
 
-  if (isLoading) {
+  if (isLoading || statusLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -31,6 +35,37 @@ export default function HospitalAdminDashboard() {
 
   if (!isAuthorized) {
     return null;
+  }
+
+  // Show pending approval screen if hospital status is PENDING
+  if (hospitalStatus === "PENDING") {
+    return <PendingApprovalScreen />;
+  }
+
+  // Show rejection message if hospital status is REJECTED
+  if (hospitalStatus === "REJECTED") {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Application Rejected
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Unfortunately, your hospital registration has been rejected. Please
+            contact support for more information.
+          </p>
+          <a
+            href="mailto:support@echanneling.com"
+            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Contact Support
+          </a>
+        </div>
+      </div>
+    );
   }
 
   // Dummy data for Today's Sessions

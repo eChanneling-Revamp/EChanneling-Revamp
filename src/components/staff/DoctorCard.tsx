@@ -17,7 +17,14 @@ export type Doctor = {
   email: string;
   phone: string;
   sessions: string; // e.g. "Mon, Wed, Fri"
-  status: "Active" | "On Leave" | "Inactive";
+  status:
+    | "PENDING"
+    | "APPROVED"
+    | "REJECTED"
+    | "SUSPENDED"
+    | "Active"
+    | "On Leave"
+    | "Inactive";
   color?: string; // avatar bg color
 };
 
@@ -33,6 +40,30 @@ export default function DoctorCard({
   onDelete,
 }: DoctorCardProps) {
   const statusConfig = {
+    PENDING: {
+      bg: "bg-yellow-50",
+      text: "text-yellow-700",
+      dot: "bg-yellow-500",
+      border: "border-yellow-200",
+    },
+    APPROVED: {
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      dot: "bg-emerald-500",
+      border: "border-emerald-200",
+    },
+    REJECTED: {
+      bg: "bg-red-50",
+      text: "text-red-700",
+      dot: "bg-red-500",
+      border: "border-red-200",
+    },
+    SUSPENDED: {
+      bg: "bg-gray-50",
+      text: "text-gray-700",
+      dot: "bg-gray-500",
+      border: "border-gray-200",
+    },
     Active: {
       bg: "bg-emerald-50",
       text: "text-emerald-700",
@@ -54,6 +85,20 @@ export default function DoctorCard({
   };
 
   const config = statusConfig[doctor.status];
+
+  // Get user-friendly status text
+  const getStatusText = (status: string) => {
+    const statusLabels: Record<string, string> = {
+      PENDING: "Pending Approval",
+      APPROVED: "Approved",
+      REJECTED: "Rejected",
+      SUSPENDED: "Suspended",
+      Active: "Active",
+      "On Leave": "On Leave",
+      Inactive: "Inactive",
+    };
+    return statusLabels[status] || status;
+  };
 
   // Extract initials from name
   const getInitials = (name: string) => {
@@ -161,7 +206,7 @@ export default function DoctorCard({
               className={`w-2 h-2 rounded-full ${config.dot} animate-pulse`}
             ></span>
             <span className={`text-xs font-semibold ${config.text}`}>
-              {doctor.status}
+              {getStatusText(doctor.status)}
             </span>
           </div>
         </div>
