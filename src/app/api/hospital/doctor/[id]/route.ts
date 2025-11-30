@@ -216,7 +216,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
     }
 
-    if (existingDoctor.hospitals.email !== userEmail) {
+    if (
+      !existingDoctor.hospitals ||
+      existingDoctor.hospitals.email !== userEmail
+    ) {
       return NextResponse.json(
         { error: "You can only delete doctors from your own hospital" },
         { status: 403 }
