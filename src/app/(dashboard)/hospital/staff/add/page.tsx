@@ -17,33 +17,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import axios from "axios";
-
-const specializations = [
-  "Cardiology",
-  "Dermatology",
-  "Emergency Medicine",
-  "Endocrinology",
-  "Family Medicine",
-  "Gastroenterology",
-  "General Surgery",
-  "Gynecology",
-  "Hematology",
-  "Internal Medicine",
-  "Nephrology",
-  "Neurology",
-  "Obstetrics",
-  "Oncology",
-  "Ophthalmology",
-  "Orthopedics",
-  "Otolaryngology (ENT)",
-  "Pediatrics",
-  "Psychiatry",
-  "Pulmonology",
-  "Radiology",
-  "Rheumatology",
-  "Urology",
-  "Other",
-];
+import { specializations } from "@/data/specializations";
 
 const daysOfWeek = [
   "Monday",

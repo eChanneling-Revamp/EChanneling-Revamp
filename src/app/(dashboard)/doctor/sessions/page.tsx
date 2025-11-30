@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDoctorStatus } from "@/hooks/useDoctorStatus";
 import PendingApprovalScreen from "@/components/doctor/PendingApprovalScreen";
+import { useRouter } from "next/navigation";
 import {
   InputGroup,
   InputGroupAddon,
@@ -46,12 +47,21 @@ interface Nurse {
 }
 
 export default function SessionsPage() {
-  const { status, isLoading: statusLoading } = useDoctorStatus();
+  const router = useRouter();
+  const { status, isLoading: statusLoading, needsSetup } = useDoctorStatus();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
+
+  useEffect(() => {
+    // Redirect to setup if doctor needs to complete profile
+    if (!statusLoading && needsSetup) {
+      router.push("/doctor-setup");
+    }
+  }, [needsSetup, statusLoading, router]);
   const [nurses, setNurses] = useState<Nurse[]>([]);
   const [doctorId, setDoctorId] = useState("");
   const [doctorName, setDoctorName] = useState("");
+  const [doctorHospitalId, setDoctorHospitalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterDate, setFilterDate] = useState("all");
@@ -110,6 +120,7 @@ export default function SessionsPage() {
             if (data.data && data.data.id) {
               setDoctorId(data.data.id);
               setDoctorName(data.data.name);
+              setDoctorHospitalId(data.data.hospitalId || null);
             } else {
               console.error(
                 "Doctor not found:",
@@ -133,9 +144,6 @@ export default function SessionsPage() {
     } else {
       setLoading(false);
     }
-
-    fetchHospitals();
-    fetchNurses();
   }, []);
 
   useEffect(() => {
@@ -144,23 +152,37 @@ export default function SessionsPage() {
     }
   }, [doctorId]);
 
-  // Fetch hospitals
+  useEffect(() => {
+    if (doctorHospitalId !== null) {
+      fetchHospitals();
+      fetchNurses();
+    }
+  }, [doctorHospitalId]);
+
+  // Fetch hospitals - filter to show only doctor's hospital
   const fetchHospitals = async () => {
     try {
       const res = await fetch("/api/hospital");
       const data = await res.json();
       if (data.data && Array.isArray(data.data)) {
-        setHospitals(data.data);
+        // Filter hospitals to only show the one(s) the doctor belongs to
+        const filteredHospitals = doctorHospitalId
+          ? data.data.filter((h: Hospital) => h.id === doctorHospitalId)
+          : data.data;
+        setHospitals(filteredHospitals);
       }
     } catch (error) {
       console.error("Error fetching hospitals:", error);
     }
   };
 
-  // Fetch nurses
+  // Fetch nurses - filter to show only nurses from doctor's hospital
   const fetchNurses = async () => {
     try {
-      const res = await fetch("/api/hospital/nurse");
+      const url = doctorHospitalId
+        ? `/api/hospital/nurse?hospitalId=${doctorHospitalId}`
+        : "/api/hospital/nurse";
+      const res = await fetch(url);
       const data = await res.json();
       if (data.data && Array.isArray(data.data)) {
         setNurses(data.data);

@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check if user has hospital role
-    if (userRole !== "hospital") {
+    // Check if user has hospital or doctor role
+    if (userRole !== "hospital" && userRole !== "doctor") {
       return NextResponse.json(
         {
           error:
-            "Insufficient privileges. Only hospital users can add doctors.",
+            "Insufficient privileges. Only hospital and doctor users can add doctors.",
         },
         { status: 403 }
       );
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       hospitalId,
     } = body;
 
-    // Validate required fields
+    // Validate required fields (hospitalId not required for doctor role)
     if (
       !name ||
       !email ||
@@ -60,8 +60,7 @@ export async function POST(req: NextRequest) {
       !specialization ||
       !qualification ||
       experience === undefined ||
-      consultationFee === undefined ||
-      !hospitalId
+      consultationFee === undefined
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -69,17 +68,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify the hospital belongs to the logged-in user
-    const hospital = await prisma.hospital.findUnique({
-      where: { id: hospitalId },
-      select: { email: true },
-    });
+    // Verify the hospital ownership only for hospital role
+    if (userRole === "hospital" && hospitalId) {
+      const hospital = await prisma.hospital.findUnique({
+        where: { id: hospitalId },
+        select: { email: true },
+      });
 
-    if (!hospital || hospital.email !== userEmail) {
-      return NextResponse.json(
-        { error: "You can only add doctors to your own hospital" },
-        { status: 403 }
-      );
+      if (!hospital || hospital.email !== userEmail) {
+        return NextResponse.json(
+          { error: "You can only add doctors to your own hospital" },
+          { status: 403 }
+        );
+      }
     }
 
     // Check if doctor with this email already exists
@@ -106,9 +107,21 @@ export async function POST(req: NextRequest) {
         consultationFee: parseFloat(consultationFee),
         description: description || null,
         profileImage: profileImage || null,
-        languages: languages || [],
-        availableDays: availableDays || [],
-        hospitalId,
+        languages:
+          typeof languages === "string"
+            ? languages
+                .split(",")
+                .map((lang) => lang.trim())
+                .filter(Boolean)
+            : languages || [],
+        availableDays:
+          typeof availableDays === "string"
+            ? availableDays
+                .split(",")
+                .map((day) => day.trim())
+                .filter(Boolean)
+            : availableDays || [],
+        hospitalId: hospitalId || null,
         isActive: true,
         status: "PENDING", // Default status for new doctors
       },

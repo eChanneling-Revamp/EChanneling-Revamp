@@ -4,6 +4,7 @@ import { useRoleProtection } from "@/hooks/useRoleProtection";
 import { useDoctorStatus } from "@/hooks/useDoctorStatus";
 import PendingApprovalScreen from "@/components/doctor/PendingApprovalScreen";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Hospital {
@@ -21,13 +22,21 @@ interface Hospital {
 }
 
 export default function DoctorHospitalsPage() {
+  const router = useRouter();
   const { isAuthorized, isLoading } = useRoleProtection({
     allowedRoles: ["doctor"],
   });
-  const { status, isLoading: statusLoading } = useDoctorStatus();
+  const { status, isLoading: statusLoading, needsSetup } = useDoctorStatus();
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(true);
   const [doctorId, setDoctorId] = useState("");
+
+  useEffect(() => {
+    // Redirect to setup if doctor needs to complete profile
+    if (!statusLoading && needsSetup) {
+      router.push("/doctor-setup");
+    }
+  }, [needsSetup, statusLoading, router]);
 
   useEffect(() => {
     // Get doctor info from localStorage
@@ -71,15 +80,15 @@ export default function DoctorHospitalsPage() {
       const data = await res.json();
 
       if (data.data && Array.isArray(data.data)) {
-        // If doctor has a specific hospitalId, filter to show only that hospital
+        // Filter to show only the doctor's assigned hospital
         if (hospitalId) {
           const filtered = data.data.filter(
             (h: Hospital) => h.id === hospitalId
           );
           setHospitals(filtered);
         } else {
-          // Otherwise show all hospitals (in case doctor works at multiple)
-          setHospitals(data.data);
+          // If no hospitalId assigned, show empty list
+          setHospitals([]);
         }
       }
     } catch (error) {
