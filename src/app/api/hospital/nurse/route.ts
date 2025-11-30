@@ -137,17 +137,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const hospitalId = searchParams.get("hospitalId");
 
-    if (!hospitalId) {
-      return NextResponse.json(
-        { error: "Hospital ID is required" },
-        { status: 400 }
-      );
+    const where: any = {};
+    if (hospitalId) {
+      where.hospitalId = hospitalId;
     }
 
     const nurses = await prisma.nurse_Detail.findMany({
-      where: {
-        hospitalId: hospitalId,
-      },
+      where,
       select: {
         id: true,
         name: true,

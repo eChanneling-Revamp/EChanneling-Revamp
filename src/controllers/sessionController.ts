@@ -33,10 +33,24 @@ export async function createSession(data: any) {
 }
 
 /**
- * Get all sessions
+ * Get all sessions with optional filtering
  */
-export async function getAllSessions() {
+export async function getAllSessions(
+  doctorId?: string | null,
+  hospitalId?: string | null
+) {
+  const where: any = {};
+
+  if (doctorId) {
+    where.doctorId = doctorId;
+  }
+
+  if (hospitalId) {
+    where.hospitalId = hospitalId;
+  }
+
   return prisma.session.findMany({
+    where,
     orderBy: {
       startTime: "asc",
     },

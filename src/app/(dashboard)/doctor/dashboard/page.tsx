@@ -2,13 +2,16 @@
 "use client";
 
 import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { useDoctorStatus } from "@/hooks/useDoctorStatus";
+import PendingApprovalScreen from "@/components/doctor/PendingApprovalScreen";
 
 export default function DoctorDashboard() {
   const { isAuthorized, isLoading } = useRoleProtection({
     allowedRoles: ["doctor"],
   });
+  const { status, isLoading: statusLoading } = useDoctorStatus();
 
-  if (isLoading) {
+  if (isLoading || statusLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -21,6 +24,11 @@ export default function DoctorDashboard() {
 
   if (!isAuthorized) {
     return null;
+  }
+
+  // Show pending approval screen if doctor is pending
+  if (status === "PENDING") {
+    return <PendingApprovalScreen />;
   }
 
   return (

@@ -146,15 +146,58 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET - Get all doctors for a hospital
+// GET - Get all doctors for a hospital or get a specific doctor by email
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const hospitalId = searchParams.get("hospitalId");
+    const email = searchParams.get("email");
 
+    // If email is provided, fetch specific doctor
+    if (email) {
+      const doctor = await prisma.doctor.findUnique({
+        where: {
+          email: email,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phonenumber: true,
+          specialization: true,
+          qualification: true,
+          experience: true,
+          consultationFee: true,
+          rating: true,
+          profileImage: true,
+          description: true,
+          languages: true,
+          availableDays: true,
+          isActive: true,
+          status: true,
+          hospitalId: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      if (!doctor) {
+        return NextResponse.json(
+          { error: "Doctor not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        message: "Doctor retrieved successfully",
+        data: doctor,
+      });
+    }
+
+    // Otherwise, require hospitalId to list all doctors
     if (!hospitalId) {
       return NextResponse.json(
-        { error: "Hospital ID is required" },
+        { error: "Hospital ID or email is required" },
         { status: 400 }
       );
     }
