@@ -118,6 +118,7 @@ model Hospital {
   district      String
   contactNumber String
   email         String        @unique
+  profileImage  String?
   website       String?
   facilities    String[]
   status        hospital_status  @default(PENDING)
