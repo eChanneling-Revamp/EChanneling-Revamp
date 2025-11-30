@@ -207,18 +207,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Otherwise, require hospitalId to list all doctors
-    if (!hospitalId) {
-      return NextResponse.json(
-        { error: "Hospital ID or email is required" },
-        { status: 400 }
-      );
-    }
-
+    // If hospitalId is provided, filter by hospital
+    // Otherwise, fetch all doctors
     const doctors = await prisma.doctor.findMany({
-      where: {
-        hospitalId: hospitalId,
-      },
+      where: hospitalId ? { hospitalId: hospitalId } : {},
       select: {
         id: true,
         name: true,
@@ -235,6 +227,13 @@ export async function GET(req: NextRequest) {
         availableDays: true,
         isActive: true,
         status: true,
+        hospitalId: true,
+        hospitals: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },

@@ -56,9 +56,10 @@ export async function PUT(
       availableDays,
       isActive,
       status,
+      hospitalId,
     } = body;
 
-    // Verify the doctor exists and belongs to the logged-in hospital
+    // Verify the doctor exists
     const existingDoctor = await prisma.doctor.findUnique({
       where: { id: doctorId },
       include: {
@@ -72,7 +73,27 @@ export async function PUT(
       return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
     }
 
-    if (existingDoctor.hospitals.email !== userEmail) {
+    // If only updating hospitalId (adding existing doctor to hospital)
+    if (hospitalId && Object.keys(body).length === 1) {
+      const updatedDoctor = await prisma.doctor.update({
+        where: { id: doctorId },
+        data: { hospitalId },
+      });
+
+      return NextResponse.json(
+        {
+          message: "Doctor added to hospital successfully",
+          data: updatedDoctor,
+        },
+        { status: 200 }
+      );
+    }
+
+    // For full updates, verify the doctor belongs to the logged-in hospital
+    if (
+      existingDoctor.hospitals &&
+      existingDoctor.hospitals.email !== userEmail
+    ) {
       return NextResponse.json(
         { error: "You can only update doctors from your own hospital" },
         { status: 403 }
