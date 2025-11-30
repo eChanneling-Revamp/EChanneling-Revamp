@@ -80,11 +80,11 @@ model Doctor {
   availableDays   String[]
   isActive        Boolean       @default(true)
   status          doctor_status  @default(PENDING)
-  hospitalId      String
+  hospitalId      String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   appointments    Appointment[]
-  hospitals       Hospital      @relation(fields: [hospitalId], references: [id])
+  hospitals       Hospital?     @relation(fields: [hospitalId], references: [id])
   sessions        Session[]
   time_slots      time_slots[]
 

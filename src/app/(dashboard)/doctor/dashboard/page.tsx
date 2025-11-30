@@ -4,12 +4,22 @@
 import { useRoleProtection } from "@/hooks/useRoleProtection";
 import { useDoctorStatus } from "@/hooks/useDoctorStatus";
 import PendingApprovalScreen from "@/components/doctor/PendingApprovalScreen";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function DoctorDashboard() {
+  const router = useRouter();
   const { isAuthorized, isLoading } = useRoleProtection({
     allowedRoles: ["doctor"],
   });
-  const { status, isLoading: statusLoading } = useDoctorStatus();
+  const { status, isLoading: statusLoading, needsSetup } = useDoctorStatus();
+
+  useEffect(() => {
+    // Redirect to setup if doctor needs to complete profile
+    if (!statusLoading && needsSetup) {
+      router.push("/doctor-setup");
+    }
+  }, [needsSetup, statusLoading, router]);
 
   if (isLoading || statusLoading) {
     return (

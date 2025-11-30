@@ -6,6 +6,7 @@ interface DoctorStatusResult {
   isLoading: boolean;
   error: string | null;
   doctorData: any;
+  needsSetup: boolean;
 }
 
 export function useDoctorStatus(): DoctorStatusResult {
@@ -15,6 +16,7 @@ export function useDoctorStatus(): DoctorStatusResult {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [doctorData, setDoctorData] = useState<any>(null);
+  const [needsSetup, setNeedsSetup] = useState(false);
 
   useEffect(() => {
     const checkDoctorStatus = async () => {
@@ -44,10 +46,19 @@ export function useDoctorStatus(): DoctorStatusResult {
           const doctor = response.data.data;
           setDoctorData(doctor);
           setStatus(doctor.status || "PENDING");
+          setNeedsSetup(false);
+        } else {
+          // Doctor data doesn't exist - needs setup
+          setNeedsSetup(true);
         }
       } catch (err: any) {
-        console.error("Error checking doctor status:", err);
-        setError(err.message || "Failed to check doctor status");
+        // If 404, doctor needs to complete setup
+        if (err.response?.status === 404) {
+          setNeedsSetup(true);
+        } else {
+          console.error("Error checking doctor status:", err);
+          setError(err.message || "Failed to check doctor status");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -56,5 +67,5 @@ export function useDoctorStatus(): DoctorStatusResult {
     checkDoctorStatus();
   }, []);
 
-  return { status, isLoading, error, doctorData };
+  return { status, isLoading, error, doctorData, needsSetup };
 }
