@@ -54,7 +54,8 @@ export function useHospitalStatus(): HospitalStatusResult {
     };
 
     checkHospitalStatus();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   return { status, isLoading, error, hospitalData };
 }

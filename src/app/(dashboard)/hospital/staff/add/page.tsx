@@ -39,6 +39,7 @@ export default function AddStaffPage() {
   const { status: hospitalStatus, isLoading: statusLoading } =
     useHospitalStatus();
   const [hospitalId, setHospitalId] = useState("");
+  const [hospitalName, setHospitalName] = useState("");
   const [activeTab, setActiveTab] = useState<"doctor" | "nurse">("doctor");
   const [doctorSubTab, setDoctorSubTab] = useState<"existing" | "manual">(
     "existing"
@@ -113,6 +114,7 @@ export default function AddStaffPage() {
       const response = await axios.get(`/api/hospital/check?email=${email}`);
       if (response.data.exists && response.data.data) {
         setHospitalId(response.data.data.id);
+        setHospitalName(response.data.data.name || "");
       }
     } catch (error) {
       console.error("Error fetching hospital ID:", error);
@@ -183,24 +185,68 @@ export default function AddStaffPage() {
     const numbers = "0123456789";
     const special = "!@#$%^&*";
 
-    // Ensure at least one of each required character type
-    let password = "";
-    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
-    password += special.charAt(Math.floor(Math.random() * special.length));
+    // Fisher-Yates shuffle algorithm for proper randomization
+    const shuffle = (array: string[]) => {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
 
-    // Fill the rest with random characters from all sets
+    // Ensure at least one of each required character type
+    const passwordChars: string[] = [];
+
+    // Add 2 of each type for better strength
+    passwordChars.push(
+      uppercase.charAt(Math.floor(Math.random() * uppercase.length))
+    );
+    passwordChars.push(
+      uppercase.charAt(Math.floor(Math.random() * uppercase.length))
+    );
+    passwordChars.push(
+      lowercase.charAt(Math.floor(Math.random() * lowercase.length))
+    );
+    passwordChars.push(
+      lowercase.charAt(Math.floor(Math.random() * lowercase.length))
+    );
+    passwordChars.push(
+      numbers.charAt(Math.floor(Math.random() * numbers.length))
+    );
+    passwordChars.push(
+      numbers.charAt(Math.floor(Math.random() * numbers.length))
+    );
+    passwordChars.push(
+      special.charAt(Math.floor(Math.random() * special.length))
+    );
+    passwordChars.push(
+      special.charAt(Math.floor(Math.random() * special.length))
+    );
+
+    // Fill the rest with random characters from all sets to reach 14 characters
     const allChars = uppercase + lowercase + numbers + special;
-    for (let i = password.length; i < 12; i++) {
-      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+    while (passwordChars.length < 14) {
+      passwordChars.push(
+        allChars.charAt(Math.floor(Math.random() * allChars.length))
+      );
     }
 
-    // Shuffle the password to avoid predictable pattern
-    return password
-      .split("")
-      .sort(() => Math.random() - 0.5)
-      .join("");
+    // Properly shuffle using Fisher-Yates algorithm
+    const shuffledPassword = shuffle(passwordChars).join("");
+
+    // Verify the password meets all requirements
+    const hasUppercase = /[A-Z]/.test(shuffledPassword);
+    const hasLowercase = /[a-z]/.test(shuffledPassword);
+    const hasNumber = /[0-9]/.test(shuffledPassword);
+    const hasSpecial = /[!@#$%^&*]/.test(shuffledPassword);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+      // Recursively generate a new password if validation fails
+      return generatePassword();
+    }
+
+    return shuffledPassword;
   };
 
   const handleDoctorCheckboxChange = (
@@ -286,14 +332,15 @@ export default function AddStaffPage() {
       if (!signupResponse.data) {
         throw new Error("Failed to create user account");
       }
-
-      // Step 2: Send welcome email with credentials
+      // Step 2: Send welcome email with credentials and magic link
       await axios.post("/api/email/send-credentials", {
         to: doctorSignupData.email,
         name: doctorSignupData.name,
         email: doctorSignupData.email,
         password: generatedPassword,
         role: "doctor",
+        hospitalId: hospitalId,
+        hospitalName: hospitalName,
       });
 
       setSuccess(
@@ -435,13 +482,15 @@ export default function AddStaffPage() {
         throw new Error("Failed to create user account");
       }
 
-      // Step 2: Send welcome email with credentials
+      // Step 2: Send welcome email with credentials and magic link
       await axios.post("/api/email/send-credentials", {
         to: nurseSignupData.email,
         name: nurseSignupData.name,
         email: nurseSignupData.email,
         password: generatedPassword,
         role: "nurse",
+        hospitalId: hospitalId,
+        hospitalName: hospitalName,
       });
 
       setSuccess(

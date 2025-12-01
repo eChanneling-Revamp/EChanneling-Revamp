@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/config/mailer";
+import { generateMagicLinkToken } from "@/lib/jwt";
 
 export async function POST(req: Request) {
   try {
-    const { to, name, email, password, role } = await req.json();
+    const { to, name, email, password, role, hospitalId, hospitalName } =
+      await req.json();
 
     if (!to || !name || !email || !password || !role) {
       return NextResponse.json(
@@ -11,6 +13,22 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // Generate magic link token for doctor/nurse setup
+    const magicToken = generateMagicLinkToken({
+      email,
+      name,
+      phoneNumber: to,
+      role,
+      hospitalId: hospitalId || "",
+      hospitalName: hospitalName || "",
+      type: role === "doctor" ? "doctor-setup" : "nurse-setup",
+      createdByHospital: true, // Hospital is creating this doctor
+    });
+
+    const magicLink = `${
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    }/auth/magic-login?token=${magicToken}`;
 
     // Determine the role display name
     const roleDisplay = role.charAt(0).toUpperCase() + role.slice(1);
@@ -59,12 +77,17 @@ export async function POST(req: Request) {
             </div>
             
             <div style="margin: 30px 0; text-align: center;">
-              <a href="${
-                process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-              }/login" 
+              <a href="${magicLink}" 
                  style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600;">
-                Login to Your Account
+                Activate Account & Complete Setup
               </a>
+            </div>
+            
+            <div style="background-color: #f0f9ff; border-left: 4px solid #0284c7; padding: 15px; margin: 20px 0; border-radius: 4px;">
+              <p style="margin: 0; color: #0c4a6e; font-size: 14px;">
+                <strong>📋 One-Click Setup:</strong><br>
+                Click the button above to automatically log in and complete your profile setup. This secure link will expire in 7 days.
+              </p>
             </div>
             
             <div style="border-top: 1px solid #e5e7eb; margin-top: 30px; padding-top: 20px;">
@@ -98,8 +121,7 @@ export async function POST(req: Request) {
           </div>
           
           <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 5px 0;">This email contains sensitive information. Please keep it secure.</p>
-            <p style="margin: 5px 0;">© ${new Date().getFullYear()} eChanneling. All rights reserved.</p>
+            <p style="margin: 5px 0;">This is an automated message. Please do not reply to this email.</p>
           </div>
         </div>
       `,
@@ -116,7 +138,12 @@ Role: ${roleDisplay}
 
 IMPORTANT: Please change your password immediately after your first login for security purposes.
 
-Login URL: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login
+One-Click Setup Link (expires in 7 days):
+${magicLink}
+
+Alternative Login URL: ${
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+      }/login
 
 Getting Started:
 1. Log in using the credentials above

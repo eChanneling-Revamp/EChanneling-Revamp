@@ -65,7 +65,8 @@ export function useDoctorStatus(): DoctorStatusResult {
     };
 
     checkDoctorStatus();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   return { status, isLoading, error, doctorData, needsSetup };
 }

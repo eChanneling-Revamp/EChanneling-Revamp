@@ -9,15 +9,11 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-});
-
-// Verify transporter configuration
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error("SMTP connection error:", error);
-  } else {
-    console.log("SMTP server is ready to send emails");
-  }
+  pool: true, // Use pooled connections
+  maxConnections: 5, // Max simultaneous connections
+  maxMessages: 100, // Max messages per connection
+  rateDelta: 1000, // Rate limiting: time window in ms
+  rateLimit: 5, // Rate limiting: max messages per rateDelta
 });
 
 export interface EmailOptions {
@@ -31,6 +27,10 @@ export interface EmailOptions {
 // Send email function
 export async function sendEmail(options: EmailOptions) {
   try {
+    // Verify connection before sending
+    await transporter.verify();
+    console.log("SMTP connection verified");
+
     const mailOptions = {
       from: options.from || process.env.SMTP_FROM || process.env.SMTP_USER,
       to: Array.isArray(options.to) ? options.to.join(", ") : options.to,

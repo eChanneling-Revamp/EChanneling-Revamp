@@ -19,7 +19,8 @@ export default function DoctorDashboard() {
     if (!statusLoading && needsSetup) {
       router.push("/doctor-setup");
     }
-  }, [needsSetup, statusLoading, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsSetup, statusLoading]); // Removed router from dependencies
 
   if (isLoading || statusLoading) {
     return (

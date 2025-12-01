@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       languages,
       availableDays,
       hospitalId,
+      createdByHospital,
     } = body;
 
     // Validate required fields (hospitalId not required for doctor role)
@@ -123,7 +124,8 @@ export async function POST(req: NextRequest) {
             : availableDays || [],
         hospitalId: hospitalId || null,
         isActive: true,
-        status: "PENDING", // Default status for new doctors
+        status:
+          userRole === "hospital" || createdByHospital ? "APPROVED" : "PENDING", // Auto-approve if created by hospital
       },
     });
 

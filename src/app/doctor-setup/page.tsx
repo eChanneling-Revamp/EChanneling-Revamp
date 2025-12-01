@@ -26,6 +26,9 @@ export default function DoctorSetupPage() {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [selectedHospitalId, setSelectedHospitalId] = useState("");
+  const [isHospitalPreFilled, setIsHospitalPreFilled] = useState(false);
+  const [createdByHospital, setCreatedByHospital] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -46,13 +49,48 @@ export default function DoctorSetupPage() {
         setForm((prev) => ({
           ...prev,
           email: userData.email || "",
-          name: `${userData.first_name || ""} ${
-            userData.last_name || ""
-          }`.trim(),
-          phonenumber: userData.phone_number || "",
+          name:
+            userData.name ||
+            `${userData.first_name || ""} ${userData.last_name || ""}`.trim(),
+          phonenumber: userData.phoneNumber || userData.phone_number || "",
         }));
       } catch (error) {
         console.error("Error parsing user data:", error);
+      }
+    }
+
+    // Get form pre-fill data from magic link
+    const userFormDataStr = localStorage.getItem("userFormData");
+    if (userFormDataStr) {
+      try {
+        const userFormData = JSON.parse(userFormDataStr);
+        setForm((prev) => ({
+          ...prev,
+          name: userFormData.name || prev.name,
+          phonenumber: userFormData.phoneNumber || prev.phonenumber,
+        }));
+        // Check if this doctor was created by a hospital
+        if (userFormData.createdByHospital) {
+          setCreatedByHospital(true);
+        }
+        console.log("Form pre-filled from magic link:", userFormData);
+      } catch (error) {
+        console.error("Error parsing user form data:", error);
+      }
+    }
+
+    // Check for hospital info from magic link
+    const hospitalInfoStr = localStorage.getItem("hospitalInfo");
+    if (hospitalInfoStr) {
+      try {
+        const hospitalInfo = JSON.parse(hospitalInfoStr);
+        if (hospitalInfo.hospitalId) {
+          setSelectedHospitalId(hospitalInfo.hospitalId);
+          setIsHospitalPreFilled(true);
+          console.log("Hospital pre-filled from magic link:", hospitalInfo);
+        }
+      } catch (error) {
+        console.error("Error parsing hospital info:", error);
       }
     }
 
@@ -82,20 +120,35 @@ export default function DoctorSetupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          hospitalId: selectedHospitalId || undefined,
           languages: selectedLanguages.join(", "),
           availableDays: selectedDays.join(", "),
           experience: parseInt(form.experience) || 0,
           consultationFee: parseFloat(form.consultationFee) || 0,
           rating: 0,
           isActive: true,
-          status: "PENDING",
+          createdByHospital: createdByHospital, // Pass flag to API
+          // Don't send status - let API determine based on createdByHospital flag
         }),
       });
 
       if (res.ok) {
-        alert(
-          "Profile setup completed! Your account is pending admin approval."
-        );
+        // Clear temporary data from localStorage after successful submission
+        localStorage.removeItem("hospitalInfo");
+        localStorage.removeItem("userFormData");
+
+        // Check if doctor was approved or pending
+        const responseData = await res.json();
+        const doctorStatus = responseData.data?.status;
+
+        if (doctorStatus === "APPROVED") {
+          alert("Profile setup completed! You can now access your dashboard.");
+        } else {
+          alert(
+            "Profile setup completed! Your account is pending admin approval."
+          );
+        }
+
         router.push("/doctor/dashboard");
         router.refresh();
       } else {
@@ -216,6 +269,48 @@ export default function DoctorSetupPage() {
                 Professional Details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Hospital Selection */}
+                <div className="space-y-2 md:col-span-2">
+                  <Label
+                    htmlFor="hospital"
+                    className="text-gray-700 font-semibold"
+                  >
+                    Hospital Affiliation
+                  </Label>
+                  {isHospitalPreFilled ? (
+                    <div className="h-11 px-4 rounded-lg border border-green-300 bg-green-50 flex items-center">
+                      <span className="text-green-800 font-medium">
+                        {hospitals.find((h) => h.id === selectedHospitalId)
+                          ?.name || "Hospital pre-selected"}
+                      </span>
+                      <span className="ml-2 text-xs text-green-600">
+                        (Assigned by hospital)
+                      </span>
+                    </div>
+                  ) : (
+                    <Select
+                      value={selectedHospitalId}
+                      onValueChange={(value) => setSelectedHospitalId(value)}
+                    >
+                      <SelectTrigger className="h-11 text-gray-900">
+                        <SelectValue placeholder="Select hospital (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {hospitals.map((hospital) => (
+                          <SelectItem key={hospital.id} value={hospital.id}>
+                            {hospital.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    {isHospitalPreFilled
+                      ? "This hospital has created your account. The affiliation is automatically set."
+                      : "You can select a hospital to be affiliated with (optional). Leave blank if not affiliated with any hospital."}
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="qualification"

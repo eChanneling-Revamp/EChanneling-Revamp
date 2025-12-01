@@ -70,7 +70,27 @@ export function LoginForm() {
               dashboardPath = "/admin/dashboard";
               break;
             case "doctor":
-              dashboardPath = "/doctor/dashboard";
+              // Check if doctor profile exists in database
+              try {
+                const doctorCheckResponse = await axios.get(
+                  `/api/hospital/doctor?email=${userEmail}`
+                );
+                if (doctorCheckResponse.data.data) {
+                  // Doctor profile exists, go to dashboard
+                  dashboardPath = "/doctor/dashboard";
+                } else {
+                  // Doctor profile doesn't exist, needs to complete setup
+                  dashboardPath = "/doctor-setup";
+                }
+              } catch (error: any) {
+                // 404 means doctor doesn't exist yet, redirect to setup
+                if (error.response?.status === 404) {
+                  dashboardPath = "/doctor-setup";
+                } else {
+                  console.error("Error checking doctor data:", error);
+                  dashboardPath = "/doctor/dashboard";
+                }
+              }
               break;
             case "hospital":
               // Check if hospital data exists
@@ -171,7 +191,27 @@ export function LoginForm() {
             dashboardPath = "/admin/dashboard";
             break;
           case "doctor":
-            dashboardPath = "/doctor/dashboard";
+            // Check if doctor profile exists in database
+            try {
+              const doctorCheckResponse = await axios.get(
+                `/api/hospital/doctor?email=${userEmail}`
+              );
+              if (doctorCheckResponse.data.data) {
+                // Doctor profile exists, go to dashboard
+                dashboardPath = "/doctor/dashboard";
+              } else {
+                // Doctor profile doesn't exist, needs to complete setup
+                dashboardPath = "/doctor-setup";
+              }
+            } catch (error: any) {
+              // 404 means doctor doesn't exist yet, redirect to setup
+              if (error.response?.status === 404) {
+                dashboardPath = "/doctor-setup";
+              } else {
+                console.error("Error checking doctor data:", error);
+                dashboardPath = "/doctor/dashboard";
+              }
+            }
             break;
           case "hospital":
             // Check if hospital data exists

@@ -67,7 +67,8 @@ export function useRoleProtection({
     } finally {
       setIsLoading(false);
     }
-  }, [allowedRoles, redirectTo, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   return { isAuthorized, isLoading };
 }
