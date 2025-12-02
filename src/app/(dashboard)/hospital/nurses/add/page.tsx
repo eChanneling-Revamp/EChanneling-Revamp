@@ -8,11 +8,9 @@ import {
   Mail,
   Phone,
   Briefcase,
-  FileText,
   Globe,
   Calendar,
   ArrowLeft,
-  Clock,
 } from "lucide-react";
 import axios from "axios";
 
