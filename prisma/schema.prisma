@@ -27,7 +27,6 @@ model Nurse {
   username           String
   age                String?
   hospitals          Hospital? @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
-  sessions           Session[]
 
   @@map("nurses")
 }
@@ -135,23 +134,19 @@ model Hospital {
 }
 
 model Session {
-  id              String        @id @default(cuid())
-  doctorId        String
-  doctorName      String
-  nurseId         String
-  nurseName       String?
-  nurseDetailId   String?
-  capacity        Int?          @default(20)
-  location        String?
-  hospitalId      String
-  status          String?       @default("scheduled")
-  createdAt       DateTime?     @default(now()) @db.Timestamp(6)
-  startTime       DateTime?     @db.Timestamp(6)
-  endTime         DateTime?     @db.Timestamp(6)
-  doctors         Doctor        @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorId")
-  hospitals       Hospital      @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
-  nurses          Nurse         @relation(fields: [nurseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "nurseId")
-  nurse_details   Nurse_Detail? @relation(fields: [nurseDetailId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id         String    @id @default(cuid())
+  doctorId   String
+  nurseId    String
+  capacity   Int       @default(5)
+  location   String
+  hospitalId String
+  status     String    @default("scheduled")
+  createdAt  DateTime  @default(now()) @db.Timestamp(6)
+  startTime  DateTime  @db.Timestamp(6)
+  endTime    DateTime  @db.Timestamp(6)
+  doctors       Doctor       @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorId")
+  hospitals     Hospital     @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
+  nurse_details Nurse_Detail @relation(fields: [nurseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "nurseId")
 
   @@map("sessions")
 }

@@ -36,30 +36,22 @@ export async function PUT(
     const { id } = await params;
     const body = await req.json();
 
-    // Get the first nurse from Nurse table (required for foreign key)
-    const firstNurse = await prisma.nurse.findFirst();
-
-    if (!firstNurse) {
-      return NextResponse.json(
-        { message: "No nurses found in the system" },
-        { status: 400 }
-      );
-    }
-
     const updatedSession = await prisma.session.update({
       where: { id },
       data: {
         doctorId: body.doctorId,
-        doctorName: body.doctorName,
-        nurseId: firstNurse.id, // Required for FK constraint
-        nurseName: body.nurseName || null,
-        nurseDetailId: body.nurseId, // Store actual nurse detail ID
-        capacity: body.capacity || 20,
-        location: body.location || null,
+        nurseId: body.nurseId,
+        capacity: body.capacity || 5,
+        location: body.location,
         hospitalId: body.hospitalId,
         status: body.status || "scheduled",
-        startTime: body.startTime ? new Date(body.startTime) : null,
-        endTime: body.endTime ? new Date(body.endTime) : null,
+        startTime: body.startTime ? new Date(body.startTime) : undefined,
+        endTime: body.endTime ? new Date(body.endTime) : undefined,
+      },
+      include: {
+        doctors: true,
+        nurse_details: true,
+        hospitals: true,
       },
     });
 
