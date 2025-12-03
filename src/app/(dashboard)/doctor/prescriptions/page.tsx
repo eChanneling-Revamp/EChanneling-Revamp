@@ -1000,20 +1000,207 @@ export default function PrescriptionsPage() {
       {/* Print Styles */}
       <style jsx global>{`
         @media print {
+          /* Hide everything first */
           body * {
             visibility: hidden;
           }
-          .print\\:hidden {
+
+          /* Show only the prescription content */
+          .max-w-5xl,
+          .max-w-5xl * {
+            visibility: visible;
+          }
+
+          /* Hide toolbar and buttons */
+          .print\\:hidden,
+          .print\\:hidden * {
             display: none !important;
+            visibility: hidden !important;
           }
+
+          /* Position the content at the top of the page */
           .max-w-5xl {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100% !important;
             max-width: 100% !important;
+            margin: 0 !important;
+            padding: 15mm !important;
           }
+
+          /* Clean up styles for print */
           .bg-white {
             background: white !important;
           }
           .shadow-lg {
             box-shadow: none !important;
+          }
+
+          /* Ensure all prescription components are visible */
+          [data-medication-container],
+          [data-dietary-container],
+          [data-instructions-container],
+          [data-medication-content],
+          [data-dietary-content],
+          [data-instructions-content],
+          [data-medications-list],
+          [data-medication-item] {
+            display: block !important;
+            visibility: visible !important;
+            page-break-inside: avoid;
+          }
+
+          /* Hide interactive elements in print */
+          button,
+          [data-drag-handle],
+          [data-collapse-icon],
+          .delete-btn {
+            display: none !important;
+          }
+
+          /* Container styling for print */
+          [data-medication-container],
+          [data-dietary-container],
+          [data-instructions-container] {
+            border: 2px solid #000 !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            margin: 12px 0 !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            background: white !important;
+          }
+
+          /* Section headers */
+          [data-medication-container] > div:first-child,
+          [data-dietary-container] > div:first-child,
+          [data-instructions-container] > div:first-child {
+            margin-bottom: 12px !important;
+            padding-bottom: 8px !important;
+            border-bottom: 1px solid #e5e7eb !important;
+          }
+
+          /* Medication items */
+          [data-medication-item] {
+            page-break-inside: avoid;
+            border-top: 1px dashed #d1d5db !important;
+            margin-top: 10px !important;
+            padding-top: 10px !important;
+          }
+
+          [data-medication-item]:first-child {
+            border-top: none !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+          }
+
+          /* Text inputs styling */
+          input[type="text"],
+          textarea {
+            border: none !important;
+            border-bottom: 1px dotted #666 !important;
+            background: transparent !important;
+            padding: 2px 4px !important;
+            font-size: 14px !important;
+            color: #000 !important;
+            min-width: 200px !important;
+          }
+
+          textarea {
+            border: 1px solid #d1d5db !important;
+            border-radius: 4px !important;
+            padding: 8px !important;
+            width: 100% !important;
+            min-height: 60px !important;
+          }
+
+          /* Checkboxes and radios */
+          input[type="checkbox"],
+          input[type="radio"] {
+            width: 14px !important;
+            height: 14px !important;
+            border: 1.5px solid #000 !important;
+            background: white !important;
+            margin-right: 6px !important;
+            vertical-align: middle !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+
+          input[type="radio"] {
+            border-radius: 50% !important;
+          }
+
+          input[type="checkbox"]:checked {
+            position: relative !important;
+            background: #000 !important;
+          }
+
+          input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            left: 1px;
+            top: -3px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white !important;
+          }
+
+          input[type="radio"]:checked {
+            position: relative !important;
+            border-width: 4px !important;
+          }
+
+          /* Labels */
+          label {
+            font-weight: 500 !important;
+            color: #374151 !important;
+            font-size: 14px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+          }
+
+          /* Section titles with emojis */
+          p {
+            color: #1f2937 !important;
+            font-weight: 600 !important;
+          }
+
+          /* Typography */
+          h1,
+          h2,
+          h3 {
+            page-break-after: avoid;
+            color: #000 !important;
+          }
+
+          /* Remove gray backgrounds */
+          .bg-gray-50,
+          .bg-gray-100,
+          .bg-blue-50 {
+            background: white !important;
+          }
+
+          /* Spacing adjustments */
+          [data-medication-content] > div,
+          [data-dietary-content] > div,
+          [data-instructions-content] > div {
+            margin: 6px 0 !important;
+          }
+
+          /* Frequency section */
+          [data-day-checkboxes],
+          [data-interval-radios] {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            margin: 6px 0 !important;
+          }
+
+          [data-interval-radios] > div {
+            display: flex !important;
+            gap: 10px !important;
           }
         }
 
