@@ -1,20 +1,23 @@
 import { prisma } from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 
 /**
  * Create a new session
  */
 export async function createSession(data: any) {
+  const sessionData: Prisma.SessionUncheckedCreateInput = {
+    doctorId: data.doctorId,
+    nurseId: data.nurseId,
+    capacity: data.capacity || 5,
+    location: data.location,
+    hospitalId: data.hospitalId,
+    status: data.status || "scheduled",
+    startTime: new Date(data.startTime),
+    endTime: new Date(data.endTime),
+  };
+
   const session = await prisma.session.create({
-    data: {
-      doctorId: data.doctorId,
-      nurseId: data.nurseId,
-      capacity: data.capacity || 5,
-      location: data.location,
-      hospitalId: data.hospitalId,
-      status: data.status || "scheduled",
-      startTime: new Date(data.startTime),
-      endTime: new Date(data.endTime),
-    },
+    data: sessionData,
     include: {
       doctors: true,
       nurse_details: true,
