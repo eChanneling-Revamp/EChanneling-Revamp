@@ -974,7 +974,8 @@ export default function AddStaffPage() {
                           />
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                          Old format: 9 digits + V/X (e.g., 123456789V) or New format: 12 digits
+                          Old format: 9 digits + V/X (e.g., 123456789V) or New
+                          format: 12 digits
                         </p>
                       </div>
                     </div>
@@ -1179,7 +1180,8 @@ export default function AddStaffPage() {
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Old format: 9 digits + V/X (e.g., 123456789V) or New format: 12 digits
+                      Old format: 9 digits + V/X (e.g., 123456789V) or New
+                      format: 12 digits
                     </p>
                   </div>
                 </div>

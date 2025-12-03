@@ -46,10 +46,14 @@ export default function DoctorSetupPage() {
     if (userDataStr) {
       try {
         const userData = JSON.parse(userDataStr);
-        
+
         // Get phone number with proper fallback logic
-        const phoneNumber = userData.phone_number || userData.phoneNumber || userData.phonenumber || "";
-        
+        const phoneNumber =
+          userData.phone_number ||
+          userData.phoneNumber ||
+          userData.phonenumber ||
+          "";
+
         setForm((prev) => ({
           ...prev,
           email: userData.email || "",
@@ -68,10 +72,14 @@ export default function DoctorSetupPage() {
     if (userFormDataStr) {
       try {
         const userFormData = JSON.parse(userFormDataStr);
-        
+
         // Get phone number with proper fallback logic
-        const phoneNumber = userFormData.phone_number || userFormData.phoneNumber || userFormData.phonenumber || "";
-        
+        const phoneNumber =
+          userFormData.phone_number ||
+          userFormData.phoneNumber ||
+          userFormData.phonenumber ||
+          "";
+
         setForm((prev) => ({
           ...prev,
           name: userFormData.name || prev.name,

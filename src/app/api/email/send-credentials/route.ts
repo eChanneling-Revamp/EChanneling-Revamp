@@ -4,8 +4,16 @@ import { generateMagicLinkToken } from "@/lib/jwt";
 
 export async function POST(req: Request) {
   try {
-    const { to, name, email, phonenumber, password, role, hospitalId, hospitalName } =
-      await req.json();
+    const {
+      to,
+      name,
+      email,
+      phonenumber,
+      password,
+      role,
+      hospitalId,
+      hospitalName,
+    } = await req.json();
 
     if (!to || !name || !email || !password || !role) {
       return NextResponse.json(
