@@ -36,7 +36,6 @@ export default function PrescriptionsPage() {
     null
   );
 
-  // Callback ref to get the editor element
   const editorRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
       setEditorElement(node);
