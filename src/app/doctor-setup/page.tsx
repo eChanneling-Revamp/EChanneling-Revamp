@@ -46,13 +46,17 @@ export default function DoctorSetupPage() {
     if (userDataStr) {
       try {
         const userData = JSON.parse(userDataStr);
+        
+        // Get phone number with proper fallback logic
+        const phoneNumber = userData.phone_number || userData.phoneNumber || userData.phonenumber || "";
+        
         setForm((prev) => ({
           ...prev,
           email: userData.email || "",
           name:
             userData.name ||
             `${userData.first_name || ""} ${userData.last_name || ""}`.trim(),
-          phonenumber: userData.phoneNumber || userData.phone_number || "",
+          phonenumber: phoneNumber,
         }));
       } catch (error) {
         console.error("Error parsing user data:", error);
@@ -64,16 +68,19 @@ export default function DoctorSetupPage() {
     if (userFormDataStr) {
       try {
         const userFormData = JSON.parse(userFormDataStr);
+        
+        // Get phone number with proper fallback logic
+        const phoneNumber = userFormData.phone_number || userFormData.phoneNumber || userFormData.phonenumber || "";
+        
         setForm((prev) => ({
           ...prev,
           name: userFormData.name || prev.name,
-          phonenumber: userFormData.phoneNumber || prev.phonenumber,
+          phonenumber: phoneNumber || prev.phonenumber,
         }));
         // Check if this doctor was created by a hospital
         if (userFormData.createdByHospital) {
           setCreatedByHospital(true);
         }
-        console.log("Form pre-filled from magic link:", userFormData);
       } catch (error) {
         console.error("Error parsing user form data:", error);
       }
@@ -87,7 +94,6 @@ export default function DoctorSetupPage() {
         if (hospitalInfo.hospitalId) {
           setSelectedHospitalId(hospitalInfo.hospitalId);
           setIsHospitalPreFilled(true);
-          console.log("Hospital pre-filled from magic link:", hospitalInfo);
         }
       } catch (error) {
         console.error("Error parsing hospital info:", error);

@@ -66,6 +66,7 @@ export default function AddStaffPage() {
     phonenumber: "",
     age: "",
     gender: "",
+    nic: "",
     role: "doctor",
   });
   const [nurseFormData, setNurseFormData] = useState({
@@ -82,6 +83,7 @@ export default function AddStaffPage() {
     phonenumber: "",
     age: "",
     gender: "",
+    nic: "",
     role: "nurse",
   });
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -321,6 +323,7 @@ export default function AddStaffPage() {
           password: generatedPassword,
           confirm_password: generatedPassword,
           phone_number: doctorSignupData.phonenumber,
+          nic: doctorSignupData.nic,
           role: "doctor",
           age: parseInt(doctorSignupData.age),
           gender: doctorSignupData.gender.toLowerCase(),
@@ -337,6 +340,7 @@ export default function AddStaffPage() {
         to: doctorSignupData.email,
         name: doctorSignupData.name,
         email: doctorSignupData.email,
+        phonenumber: doctorSignupData.phonenumber,
         password: generatedPassword,
         role: "doctor",
         hospitalId: hospitalId,
@@ -470,6 +474,7 @@ export default function AddStaffPage() {
           password: generatedPassword,
           confirm_password: generatedPassword,
           phone_number: nurseSignupData.phonenumber,
+          nic: nurseSignupData.nic,
           role: "nurse",
           age: parseInt(nurseSignupData.age),
           gender: nurseSignupData.gender.toLowerCase(),
@@ -487,6 +492,7 @@ export default function AddStaffPage() {
         to: nurseSignupData.email,
         name: nurseSignupData.name,
         email: nurseSignupData.email,
+        phonenumber: nurseSignupData.phonenumber,
         password: generatedPassword,
         role: "nurse",
         hospitalId: hospitalId,
@@ -943,6 +949,34 @@ export default function AddStaffPage() {
                           <option value="OTHER">Other</option>
                         </select>
                       </div>
+
+                      {/* NIC */}
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="doctor-signup-nic"
+                          className="block text-sm font-semibold text-gray-700"
+                        >
+                          NIC Number <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            id="doctor-signup-nic"
+                            name="nic"
+                            type="text"
+                            placeholder="123456789V or 200012345678"
+                            value={doctorSignupData.nic}
+                            onChange={handleDoctorSignupInputChange}
+                            pattern="^([0-9]{9}[VvXx]|[0-9]{12})$"
+                            title="NIC must be either 9 digits followed by V/X or 12 digits"
+                            className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                            required
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Old format: 9 digits + V/X (e.g., 123456789V) or New format: 12 digits
+                        </p>
+                      </div>
                     </div>
 
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1119,6 +1153,34 @@ export default function AddStaffPage() {
                       <option value="FEMALE">Female</option>
                       <option value="OTHER">Other</option>
                     </select>
+                  </div>
+
+                  {/* NIC */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="nurse-signup-nic"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      NIC Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="nurse-signup-nic"
+                        name="nic"
+                        type="text"
+                        placeholder="123456789V or 200012345678"
+                        value={nurseSignupData.nic}
+                        onChange={handleNurseSignupInputChange}
+                        pattern="^([0-9]{9}[VvXx]|[0-9]{12})$"
+                        title="NIC must be either 9 digits followed by V/X or 12 digits"
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Old format: 9 digits + V/X (e.g., 123456789V) or New format: 12 digits
+                    </p>
                   </div>
                 </div>
 
