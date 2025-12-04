@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Nurse {
@@ -78,11 +79,10 @@ model Doctor {
   languages       String[]
   availableDays   String[]
   isActive        Boolean       @default(true)
-  status          doctor_status  @default(PENDING)
   hospitalId      String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  appointments    Appointment[]
+  status          doctor_status @default(PENDING)
   hospitals       Hospital?     @relation(fields: [hospitalId], references: [id])
   sessions        Session[]
   time_slots      time_slots[]
@@ -91,62 +91,63 @@ model Doctor {
 }
 
 model Nurse_Detail {
-  id              String        @id @default(cuid())
-  name            String
-  email           String        @unique
-  experience      Int
-  phonenumber     String
-  profileImage    String?
-  availableDays   String[]
-  isActive        Boolean       @default(true)
-  hospitalId      String
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  appointments    Appointment[]
-  hospitals       Hospital      @relation(fields: [hospitalId], references: [id])
-  sessions        Session[]
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  experience    Int
+  phonenumber   String
+  profileImage  String?
+  availableDays String[]
+  isActive      Boolean   @default(true)
+  hospitalId    String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  age           Int?
+  hospitals     Hospital  @relation(fields: [hospitalId], references: [id])
+  sessions      Session[]
 
   @@map("nurse_details")
 }
 
 model Hospital {
-  id            String        @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String
   address       String
   city          String
   district      String
   contactNumber String
-  email         String        @unique
-  profileImage  String?
+  email         String          @unique
   website       String?
   facilities    String[]
-  status        hospital_status  @default(PENDING)
-  isActive      Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  appointments  Appointment[]
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  status        hospital_status @default(PENDING)
+  profileImage  String?
   doctors       Doctor[]
-  nurses        Nurse[]
   nurse_details Nurse_Detail[]
+  nurses        Nurse[]
   sessions      Session[]
 
   @@map("hospitals")
 }
 
 model Session {
-  id         String    @id @default(cuid())
-  doctorId   String
-  nurseId    String
-  capacity   Int       @default(5)
-  location   String
-  hospitalId String
-  status     String    @default("scheduled")
-  createdAt  DateTime  @default(now()) @db.Timestamp(6)
-  startTime  DateTime  @db.Timestamp(6)
-  endTime    DateTime  @db.Timestamp(6)
-  doctors       Doctor       @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorId")
-  hospitals     Hospital     @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
-  nurse_details Nurse_Detail @relation(fields: [nurseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "nurseId")
+  id            String        @id @default(cuid())
+  doctorId      String
+  nurseId       String
+  capacity      Int           @default(5)
+  location      String
+  hospitalId    String
+  status        String        @default("scheduled")
+  createdAt     DateTime      @default(now()) @db.Timestamp(6)
+  scheduledAt   DateTime      @db.Timestamp(6)
+  startTime     DateTime      @db.Timestamp(6)
+  endTime       DateTime      @db.Timestamp(6)
+  appointments  Appointment[]
+  doctors       Doctor        @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorId")
+  hospitals     Hospital      @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
+  nurse_details Nurse_Detail  @relation(fields: [nurseId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "nurseId")
 
   @@map("sessions")
 }
@@ -168,13 +169,7 @@ model Appointment {
   insuranceProvider              String?
   insurancePolicyNumber          String?
   isNewPatient                   Boolean                          @default(true)
-  doctorId                       String
-  hospitalId                     String
-  timeSlotId                     String
   bookedById                     String
-  nurseDetailId                  String?
-  appointmentDate                DateTime                         @db.Date
-  appointmentTime                DateTime                         @db.Time(6)
   estimatedWaitTime              Int?
   queuePosition                  Int?
   status                         AppointmentStatus                @default(CONFIRMED)
@@ -186,17 +181,13 @@ model Appointment {
   cancellationDate               DateTime?
   createdAt                      DateTime                         @default(now())
   updatedAt                      DateTime                         @updatedAt
+  sessionId                      String
   users                          User                             @relation(fields: [bookedById], references: [id])
-  doctor                         Doctor                           @relation(fields: [doctorId], references: [id])
-  hospital                       Hospital                         @relation(fields: [hospitalId], references: [id])
-  nurse_detail                   Nurse_Detail?                    @relation(fields: [nurseDetailId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  customers                      customers                        @relation(fields: [patientEmail], references: [email])
-  time_slots                     time_slots                       @relation(fields: [timeSlotId], references: [id])
+  session                        Session                          @relation(fields: [sessionId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   corporate_package_appointments corporate_package_appointments[]
   notification_logs              notification_logs[]
   payments                       payments[]
 
-  @@index([doctorId], map: "idx_appointments_doctor_id")
   @@index([status], map: "idx_appointments_status")
   @@map("appointments")
 }
@@ -321,7 +312,6 @@ model customers {
   createdById                            String?
   createdAt                              DateTime            @default(now())
   updatedAt                              DateTime
-  appointments                           Appointment[]
   users_customers_assignedAgentIdTousers User?               @relation("customers_assignedAgentIdTousers", fields: [assignedAgentId], references: [id])
   users_customers_createdByIdTousers     User?               @relation("customers_createdByIdTousers", fields: [createdById], references: [id])
   support_tickets                        support_tickets[]
@@ -580,19 +570,18 @@ model ticket_messages {
 }
 
 model time_slots {
-  id              String        @id
+  id              String   @id
   doctorId        String
-  date            DateTime      @db.Date
-  startTime       DateTime      @db.Time(6)
-  endTime         DateTime      @db.Time(6)
-  maxAppointments Int           @default(20)
-  currentBookings Int           @default(0)
-  isActive        Boolean       @default(true)
-  consultationFee Decimal       @db.Decimal(10, 2)
-  createdAt       DateTime      @default(now())
+  date            DateTime @db.Date
+  startTime       DateTime @db.Time(6)
+  endTime         DateTime @db.Time(6)
+  maxAppointments Int      @default(20)
+  currentBookings Int      @default(0)
+  isActive        Boolean  @default(true)
+  consultationFee Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
   updatedAt       DateTime
-  appointments    Appointment[]
-  doctors         Doctor        @relation(fields: [doctorId], references: [id])
+  doctors         Doctor   @relation(fields: [doctorId], references: [id])
 
   @@unique([doctorId, date, startTime])
 }
