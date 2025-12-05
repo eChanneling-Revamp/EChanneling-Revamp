@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,17 +25,35 @@ import {
   Pill,
   Apple,
   Clock,
+  ChevronLeft,
+  ChevronRight,
+  History,
 } from "lucide-react";
 
 export default function PrescriptionsPage() {
   const { isAuthorized, isLoading } = useRoleProtection({
     allowedRoles: ["doctor"],
   });
+  const searchParams = useSearchParams();
+  const appointmentId = searchParams.get("appointmentId");
 
   const [title, setTitle] = useState("");
+  const [patientInfo, setPatientInfo] = useState({
+    name: "",
+    age: "",
+    nic: "",
+    email: "",
+    appointmentNumber: "",
+    phone: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
   const [editorElement, setEditorElement] = useState<HTMLDivElement | null>(
     null
   );
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [prescriptionHistory, setPrescriptionHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedPrescriptionId, setSelectedPrescriptionId] = useState<string | null>(null);
 
   const editorRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -171,14 +190,81 @@ export default function PrescriptionsPage() {
     }
   };
 
-  const handleSave = () => {
-    const content = editorElement?.innerHTML || "";
-    const prescription = {
-      title,
-      content,
-      timestamp: new Date().toISOString(),
-    };
-    alert("Prescription saved successfully!");
+  const handleSave = async () => {
+    if (!appointmentId) {
+      alert("No appointment ID found");
+      return;
+    }
+
+    if (!editorElement) {
+      alert("Editor not initialized");
+      return;
+    }
+
+    // Clone the editor content to preserve input values
+    const clonedContent = editorElement.cloneNode(true) as HTMLElement;
+    
+    // Capture all input, textarea, and checkbox/radio values
+    const inputs = editorElement.querySelectorAll('input, textarea, select');
+    const clonedInputs = clonedContent.querySelectorAll('input, textarea, select');
+    
+    inputs.forEach((input, index) => {
+      const clonedInput = clonedInputs[index] as HTMLInputElement | HTMLTextAreaElement;
+      if (input instanceof HTMLInputElement) {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          clonedInput.setAttribute('checked', input.checked ? 'checked' : '');
+          if (input.checked) {
+            (clonedInput as HTMLInputElement).checked = true;
+          }
+        } else {
+          clonedInput.setAttribute('value', input.value);
+        }
+      } else if (input instanceof HTMLTextAreaElement) {
+        clonedInput.textContent = input.value;
+      }
+    });
+
+    const content = clonedContent.innerHTML;
+    
+    if (!content.trim()) {
+      alert("Please add content to the prescription");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      alert("Authentication required. Please log in again.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const response = await fetch("/api/prescriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appointmentId,
+          htmlContent: content,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Prescription saved successfully!");
+      } else {
+        alert(`Error: ${data.message || "Failed to save prescription"}`);
+      }
+    } catch (error) {
+      console.error("Error saving prescription:", error);
+      alert("Failed to save prescription. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePrint = () => {
@@ -280,6 +366,103 @@ export default function PrescriptionsPage() {
     setShowSlashCommand(false);
     editorElement.focus();
   };
+
+  // Fetch appointment data and last prescription if appointmentId is provided
+  useEffect(() => {
+    if (appointmentId) {
+      // Fetch current appointment data
+      fetch(`/api/appointments/${appointmentId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && !data.error) {
+            const appointment = data;
+            
+            const calculateAge = (dob: string) => {
+              const birthDate = new Date(dob);
+              const today = new Date();
+              let age = today.getFullYear() - birthDate.getFullYear();
+              const monthDiff = today.getMonth() - birthDate.getMonth();
+              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+              }
+              return age;
+            };
+
+            const calculatedAge = appointment.patientDateOfBirth 
+              ? calculateAge(appointment.patientDateOfBirth).toString()
+              : "";
+
+            setPatientInfo({
+              name: appointment.patientName || "",
+              age: calculatedAge,
+              nic: appointment.patientNIC || "",
+              email: appointment.patientEmail || "",
+              appointmentNumber: appointment.appointmentNumber || "",
+              phone: appointment.patientPhone || "",
+            });
+
+            // Fetch last prescription if patient has NIC
+            if (appointment.patientNIC) {
+              // Fetch prescription history for sidebar
+              setLoadingHistory(true);
+              fetch(`/api/prescriptions/history?patientNIC=${appointment.patientNIC}`)
+                .then((res) => res.json())
+                .then((historyData) => {
+                  if (Array.isArray(historyData)) {
+                    setPrescriptionHistory(historyData);
+                  }
+                  setLoadingHistory(false);
+                })
+                .catch((err) => {
+                  console.error("Error fetching prescription history:", err);
+                  setLoadingHistory(false);
+                });
+
+              // Fetch last prescription to load in editor
+              fetch(`/api/prescriptions/last?patientNIC=${appointment.patientNIC}`)
+                .then((res) => res.json())
+                .then((prescriptionData) => {
+                  if (prescriptionData && prescriptionData.htmlContent && editorElement) {
+                    // Load the last prescription HTML into the editor
+                    editorElement.innerHTML = prescriptionData.htmlContent;
+                    
+                    // Restore input values and checkbox/radio states
+                    setTimeout(() => {
+                      const inputs = editorElement.querySelectorAll('input, textarea');
+                      inputs.forEach((input) => {
+                        if (input instanceof HTMLInputElement) {
+                          if (input.type === 'checkbox' || input.type === 'radio') {
+                            // Restore checked state
+                            if (input.hasAttribute('checked')) {
+                              input.checked = true;
+                            }
+                          } else {
+                            // Restore value from attribute
+                            const attrValue = input.getAttribute('value');
+                            if (attrValue) {
+                              input.value = attrValue;
+                            }
+                          }
+                        } else if (input instanceof HTMLTextAreaElement) {
+                          // Textarea value is in textContent
+                          if (input.textContent) {
+                            input.value = input.textContent;
+                          }
+                        }
+                      });
+                    }, 100);
+                  }
+                })
+                .catch((err) => {
+                  // Silently fail if no previous prescription found
+                  console.log("No previous prescription found for this patient");
+                });
+            }
+          }
+        })
+        .catch((err) => console.error("Error fetching appointment:", err));
+    }
+  }, [appointmentId, editorElement]);
 
   // Close command menu when clicking outside
   useEffect(() => {
@@ -681,6 +864,63 @@ export default function PrescriptionsPage() {
     };
   }, [editorElement]); // Re-run when editor element becomes available
 
+  // Load prescription from history
+  const loadPrescriptionFromHistory = (prescription: any) => {
+    if (!editorElement) return;
+    
+    // Set this prescription as selected
+    setSelectedPrescriptionId(prescription.id);
+    
+    editorElement.innerHTML = prescription.htmlContent;
+    
+    // Restore input values and checkbox/radio states
+    setTimeout(() => {
+      const inputs = editorElement.querySelectorAll('input, textarea');
+      inputs.forEach((input) => {
+        if (input instanceof HTMLInputElement) {
+          if (input.type === 'checkbox' || input.type === 'radio') {
+            if (input.hasAttribute('checked')) {
+              input.checked = true;
+            }
+          } else {
+            const attrValue = input.getAttribute('value');
+            if (attrValue) {
+              input.value = attrValue;
+            }
+          }
+        } else if (input instanceof HTMLTextAreaElement) {
+          if (input.textContent) {
+            input.value = input.textContent;
+          }
+        }
+      });
+    }, 100);
+  };
+
+  // Create new blank prescription
+  const createNewPrescription = () => {
+    if (!editorElement) return;
+    
+    // Clear the editor to create a fresh blank document
+    editorElement.innerHTML = '';
+    editorElement.focus();
+    
+    // Clear selected prescription
+    setSelectedPrescriptionId(null);
+  };
+
+  // Format date for timeline
+  const formatPrescriptionDate = (date: string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -697,7 +937,9 @@ export default function PrescriptionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Main Content */}
+      <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'mr-96' : 'mr-0'}`}>
       {/* Toolbar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm print:hidden">
         <div className="max-w-5xl mx-auto px-6 py-3">
@@ -709,6 +951,16 @@ export default function PrescriptionsPage() {
               </h1>
             </div>
             <div className="flex gap-2">
+              {patientInfo.nic && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="flex items-center gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  {isSidebarOpen ? 'Hide' : 'Show'} History
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={handlePrint}
@@ -719,10 +971,11 @@ export default function PrescriptionsPage() {
               </Button>
               <Button
                 onClick={handleSave}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                disabled={isSaving}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                Save
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
@@ -868,14 +1121,59 @@ export default function PrescriptionsPage() {
       {/* Editor Content */}
       <div className="max-w-5xl mx-auto px-6 py-12 relative">
         <div className="bg-white rounded-lg shadow-lg min-h-[800px] p-12">
-          {/* Title Input */}
-          <Input
-            type="text"
-            placeholder="Prescription Title..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="text-4xl font-bold border-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 mb-8 text-gray-900 placeholder:text-gray-400"
-          />
+          {/* Patient Information Header */}
+          <div className="mb-8 pb-6 border-b-2 border-gray-200">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  Patient Name
+                </label>
+                <p className="text-lg font-bold text-gray-900 mt-1">
+                  {patientInfo.name || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  Age
+                </label>
+                <p className="text-lg font-bold text-gray-900 mt-1">
+                  {patientInfo.age ? `${patientInfo.age} years` : "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  NIC Number
+                </label>
+                <p className="text-lg font-bold text-gray-900 mt-1">
+                  {patientInfo.nic || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  Phone Number
+                </label>
+                <p className="text-lg font-bold text-gray-900 mt-1">
+                  {patientInfo.phone || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  Email Address
+                </label>
+                <p className="text-lg font-bold text-gray-900 mt-1">
+                  {patientInfo.email || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  Appointment Number
+                </label>
+                <p className="text-lg font-bold text-gray-900 mt-1">
+                  {patientInfo.appointmentNumber || "N/A"}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Rich Text Editor */}
           <div
@@ -1279,5 +1577,132 @@ export default function PrescriptionsPage() {
         }
       `}</style>
     </div>
+
+    {/* Right Sidebar - Prescription History */}
+    <div 
+      className={`fixed right-0 top-0 h-full w-96 bg-white border-l border-gray-200 shadow-2xl transform transition-transform duration-300 z-20 ${
+        isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}
+    >
+      <div className="flex flex-col h-full">
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-cyan-600">
+          <div className="flex items-center gap-2 text-white">
+            <History className="w-5 h-5" />
+            <h2 className="text-lg font-semibold">Prescription History</h2>
+          </div>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="text-white hover:bg-white/20 rounded p-1 transition"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Patient Info */}
+        {patientInfo.name && (
+          <div className="p-4 bg-blue-50 border-b border-gray-200">
+            <p className="text-sm font-semibold text-gray-900">{patientInfo.name}</p>
+            <p className="text-xs text-gray-600">NIC: {patientInfo.nic}</p>
+          </div>
+        )}
+
+        {/* New Prescription Button */}
+        <div className="p-4 border-b border-gray-200">
+          <button
+            onClick={createNewPrescription}
+            className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium rounded-lg shadow-md hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            New Prescription
+          </button>
+        </div>
+
+        {/* Timeline */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {loadingHistory ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : prescriptionHistory.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No prescription history found</p>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Timeline Line */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-600 via-cyan-500 to-green-500"></div>
+              
+              {/* Timeline Items */}
+              <div className="space-y-4">
+                {prescriptionHistory.map((prescription, index) => (
+                  <div key={prescription.id} className="relative pl-12">
+                    {/* Timeline Dot */}
+                    <div className="absolute left-2.5 w-3 h-3 rounded-full bg-blue-600 border-2 border-white shadow"></div>
+                    
+                    {/* Card */}
+                    <div 
+                      onClick={() => loadPrescriptionFromHistory(prescription)}
+                      className={`bg-white border-2 rounded-lg p-3 shadow-sm hover:shadow-md cursor-pointer transition-all ${
+                        selectedPrescriptionId === prescription.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-blue-400'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-gray-900">
+                            {prescription.prescriptionNumber}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {formatPrescriptionDate(prescription.createdAt)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className={`w-2 h-2 rounded-full ${
+                            prescription.status === 'ACTIVE' ? 'bg-green-500' :
+                            prescription.status === 'REVISED' ? 'bg-yellow-500' :
+                            prescription.status === 'CANCELLED' ? 'bg-red-500' :
+                            'bg-blue-500'
+                          }`}></div>
+                          <span className="text-xs text-gray-500">
+                            v{prescription.version}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {prescription.doctor && (
+                        <p className="text-xs text-gray-600">
+                          Dr. {prescription.doctor.name}
+                        </p>
+                      )}
+                      
+                      {prescription.appointment && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Appt: {prescription.appointment.appointmentNumber}
+                        </p>
+                      )}
+                      
+                      <div className="mt-2 flex items-center text-blue-600 text-xs">
+                        <span>Click to load</span>
+                        <ChevronLeft className="w-3 h-3 ml-1" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
   );
 }
+
