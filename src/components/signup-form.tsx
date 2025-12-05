@@ -29,7 +29,13 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { phoneNumber } from "better-auth/plugins";
 
-const API_BASE_URL = "https://dpdlab1.slt.lk:8645/auth/api";
+// Use local API routes as proxy to external API
+const axiosInstance = axios.create({
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 30000, // 30 seconds timeout
+});
 
 export function SignupForm() {
   const router = useRouter();
@@ -41,6 +47,7 @@ export function SignupForm() {
     password: "",
     confirmPassword: "",
     phoneNumber: "",
+    nic: "",
     age: "",
     gender: "male",
     role: "patient",
@@ -80,9 +87,9 @@ export function SignupForm() {
 
     try {
       console.log("Registering user with data:", formData);
-      // Register user using external API
-      const registerResponse = await axios.post(
-        `${API_BASE_URL}/auth/register`,
+      // Register user using external API via proxy
+      const registerResponse = await axiosInstance.post(
+        "/api/external-auth/register",
         {
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -90,6 +97,7 @@ export function SignupForm() {
           password: formData.password,
           confirm_password: formData.confirmPassword,
           phone_number: formData.phoneNumber,
+          nic: formData.nic,
           role: formData.role,
           age: parseInt(formData.age),
           gender: formData.gender,
@@ -99,9 +107,12 @@ export function SignupForm() {
       console.log("Registration successful:", registerResponse.data);
 
       // Send OTP after successful registration
-      const otpResponse = await axios.post(`${API_BASE_URL}/auth/send-otp`, {
-        phone_number: formData.phoneNumber,
-      });
+      const otpResponse = await axiosInstance.post(
+        "/api/external-auth/send-otp",
+        {
+          phone_number: formData.phoneNumber,
+        }
+      );
 
       console.log("OTP sent:", otpResponse.data);
 
@@ -109,11 +120,18 @@ export function SignupForm() {
       setStep("verify");
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
-        setError(
-          error.response?.data?.message ||
-            error.response?.data?.error ||
-            "Registration failed"
-        );
+        // Handle specific error codes
+        if (error.response?.status === 409) {
+          setError(
+            "An account with this email, phone number, or NIC already exists. Please login or use different credentials."
+          );
+        } else {
+          setError(
+            error.response?.data?.message ||
+              error.response?.data?.error ||
+              "Registration failed. Please try again."
+          );
+        }
       } else {
         setError("An error occurred during registration");
       }
@@ -135,11 +153,14 @@ export function SignupForm() {
     }
 
     try {
-      // Verify OTP using external API
-      const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
-        phone_number: formData.phoneNumber,
-        otp: otp,
-      });
+      // Verify OTP using external API via proxy
+      const response = await axiosInstance.post(
+        "/api/external-auth/verify-otp",
+        {
+          phone_number: formData.phoneNumber,
+          otp: otp,
+        }
+      );
 
       console.log("OTP verified:", response.data);
 
@@ -166,7 +187,7 @@ export function SignupForm() {
     setError("");
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/send-otp`, {
+      const response = await axiosInstance.post("/api/external-auth/send-otp", {
         phone_number: formData.phoneNumber,
       });
 
@@ -296,6 +317,29 @@ export function SignupForm() {
                   type="tel"
                   placeholder="+94771234567"
                   value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className="w-full h-11 pl-10 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* NIC Field */}
+            <div className="space-y-2">
+              <label
+                htmlFor="nic"
+                className="block text-sm font-medium text-gray-700"
+              >
+                NIC Number
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  id="nic"
+                  name="nic"
+                  type="text"
+                  placeholder="200012345678"
+                  value={formData.nic}
                   onChange={handleChange}
                   className="w-full h-11 pl-10 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                   required
