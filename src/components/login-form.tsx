@@ -261,7 +261,7 @@ export function LoginForm() {
     setError("");
 
     try {
-      await axios.post(`${API_BASE_URL}/auth/send-otp`, {
+      await axios.post("/api/external-auth/send-otp", {
         phone_number: phoneNumber,
       });
 
@@ -540,8 +540,8 @@ export function LoginForm() {
           disabled={isLoading}
           onClick={async () => {
             try {
-              // Get Google OAuth URL from external API
-              const response = await axios.get(`${API_BASE_URL}/google/url`);
+              // Get Google OAuth URL from external API via proxy
+              const response = await axios.get("/api/external-auth/google/url");
               if (response.data.url) {
                 window.location.href = response.data.url;
               }
