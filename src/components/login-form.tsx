@@ -11,8 +11,6 @@ import {
 } from "@/components/ui/input-otp";
 import axios from "axios";
 
-const API_BASE_URL = "https://dpdlab1.slt.lk:8645/auth/api";
-
 export function LoginForm() {
   const router = useRouter();
   const [loginMethod, setLoginMethod] = useState<"password" | "otp">(
@@ -33,10 +31,10 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log(email, password, "URL:", API_BASE_URL);
+      console.log(email, password);
       if (loginMethod === "password") {
-        // Use external API for password login
-        const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        // Use external API for password login via proxy
+        const response = await axios.post("/api/external-auth/login", {
           email: email, // API expects email field
           password: password,
         });
@@ -122,8 +120,8 @@ export function LoginForm() {
         console.log("Navigating to:", dashboardPath);
         router.push(dashboardPath);
       } else {
-        // Send OTP to phone number
-        await axios.post(`${API_BASE_URL}/auth/send-otp`, {
+        // Send OTP to phone number via proxy
+        await axios.post("/api/external-auth/send-otp", {
           phone_number: phoneNumber,
         });
 
@@ -157,7 +155,7 @@ export function LoginForm() {
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
+      const response = await axios.post("/api/external-auth/verify-otp", {
         phone_number: phoneNumber,
         otp: otp,
       });
