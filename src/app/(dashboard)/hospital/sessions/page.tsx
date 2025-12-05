@@ -107,12 +107,38 @@ export default function SessionsPage() {
     status: "scheduled",
   });
 
-  // Fetch all sessions
+  // Fetch all sessions for this hospital
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/sessions");
+      // Get hospital data from localStorage
+      const userDataStr = localStorage.getItem("user");
+      if (!userDataStr) {
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
+      const userData = JSON.parse(userDataStr);
+
+      // Fetch hospital ID
+      const hospitalResponse = await fetch(
+        `/api/hospital/check?email=${userData.email}`
+      );
+      const hospitalData = await hospitalResponse.json();
+
+      if (!hospitalData.exists || !hospitalData.data) {
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
+      const currentHospitalId = hospitalData.data.id;
+
+      // Fetch sessions filtered by hospital ID via API
+      const res = await fetch(`/api/sessions?hospitalId=${currentHospitalId}`);
       const data = await res.json();
+
       // Ensure data is always an array
       if (Array.isArray(data)) {
         setSessions(data);
