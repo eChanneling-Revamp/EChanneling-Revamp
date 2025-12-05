@@ -65,27 +65,28 @@ model User {
 }
 
 model Doctor {
-  id              String        @id @default(cuid())
+  id              String          @id @default(cuid())
   name            String
-  email           String        @unique
+  email           String          @unique
   specialization  String
   qualification   String
   experience      Int
   phonenumber     String
-  consultationFee Decimal       @db.Decimal(10, 2)
-  rating          Decimal?      @db.Decimal(3, 2)
+  consultationFee Decimal         @db.Decimal(10, 2)
+  rating          Decimal?        @db.Decimal(3, 2)
   profileImage    String?
   description     String?
   languages       String[]
   availableDays   String[]
-  isActive        Boolean       @default(true)
+  isActive        Boolean         @default(true)
   hospitalId      String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  status          doctor_status @default(PENDING)
-  hospitals       Hospital?     @relation(fields: [hospitalId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  status          doctor_status   @default(PENDING)
+  hospitals       Hospital?       @relation(fields: [hospitalId], references: [id])
   sessions        Session[]
   time_slots      time_slots[]
+  prescriptions   Prescription[]
 
   @@map("doctors")
 }
@@ -187,9 +188,38 @@ model Appointment {
   corporate_package_appointments corporate_package_appointments[]
   notification_logs              notification_logs[]
   payments                       payments[]
+  prescriptions                  Prescription[]
 
   @@index([status], map: "idx_appointments_status")
+  @@index([patientEmail], map: "idx_appointments_patient_email")
   @@map("appointments")
+}
+
+model Prescription {
+  id                   String             @id @default(cuid())
+  prescriptionNumber   String             @unique
+  appointmentId        String
+  patientEmail         String
+  doctorId             String
+  htmlContent          String             @db.Text
+  status               PrescriptionStatus @default(ACTIVE)
+  version              Int                @default(1)
+  parentPrescriptionId String?
+  isLatestVersion      Boolean            @default(true)
+  editReason           String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  appointment          Appointment        @relation(fields: [appointmentId], references: [id])
+  doctor               Doctor             @relation(fields: [doctorId], references: [id])
+  parentPrescription   Prescription?      @relation("PrescriptionVersions", fields: [parentPrescriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  childPrescriptions   Prescription[]     @relation("PrescriptionVersions")
+
+  @@index([appointmentId], map: "idx_prescription_appointment")
+  @@index([patientEmail], map: "idx_prescription_patient")
+  @@index([doctorId], map: "idx_prescription_doctor")
+  @@index([createdAt], map: "idx_prescription_created")
+  @@index([parentPrescriptionId], map: "idx_prescription_parent")
+  @@map("prescriptions")
 }
 
 model activity_logs {
@@ -752,4 +782,11 @@ enum hospital_status {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  REVISED
+  CANCELLED
+  COMPLETED
 }
