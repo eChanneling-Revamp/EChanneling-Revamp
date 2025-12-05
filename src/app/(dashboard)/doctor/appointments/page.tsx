@@ -1,5 +1,5 @@
 "use client";
-import { Search, Eye, Calendar, Clock, User, Phone, Mail } from "lucide-react";
+import { Search, Eye, Calendar, Clock, User, Phone, Mail, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDoctorStatus } from "@/hooks/useDoctorStatus";
@@ -597,15 +597,30 @@ export default function DoctorAppointmentsPage() {
                           </div>
                         </div>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewAppointment(appointment)}
-                          className="bg-blue-900 hover:bg-blue-950 text-white hover:text-white"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              router.push(
+                                `/doctor/prescriptions?appointmentId=${appointment.id}`
+                              )
+                            }
+                            className="bg-green-600 hover:bg-green-700 text-white hover:text-white"
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Prescription
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewAppointment(appointment)}
+                            className="bg-blue-900 hover:bg-blue-950 text-white hover:text-white"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
