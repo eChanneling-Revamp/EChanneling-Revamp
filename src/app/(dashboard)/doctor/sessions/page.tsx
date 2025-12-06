@@ -61,7 +61,7 @@ export default function SessionsPage() {
   const [nurses, setNurses] = useState<Nurse[]>([]);
   const [doctorId, setDoctorId] = useState("");
   const [doctorName, setDoctorName] = useState("");
-  const [doctorHospitalId, setDoctorHospitalId] = useState<string | null>(null);
+  const [doctorHospitalId, setDoctorHospitalId] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterDate, setFilterDate] = useState("all");
@@ -120,7 +120,7 @@ export default function SessionsPage() {
             if (data.data && data.data.id) {
               setDoctorId(data.data.id);
               setDoctorName(data.data.name);
-              setDoctorHospitalId(data.data.hospitalId || null);
+              setDoctorHospitalId(data.data.hospitalId || []);
             } else {
               console.error(
                 "Doctor not found:",
@@ -153,22 +153,23 @@ export default function SessionsPage() {
   }, [doctorId]);
 
   useEffect(() => {
-    if (doctorHospitalId !== null) {
+    if (doctorHospitalId.length > 0) {
       fetchHospitals();
       fetchNurses();
     }
   }, [doctorHospitalId]);
 
-  // Fetch hospitals - filter to show only doctor's hospital
+  // Fetch hospitals - filter to show only doctor's hospitals
   const fetchHospitals = async () => {
     try {
       const res = await fetch("/api/hospital");
       const data = await res.json();
       if (data.data && Array.isArray(data.data)) {
-        // Filter hospitals to only show the one(s) the doctor belongs to
-        const filteredHospitals = doctorHospitalId
-          ? data.data.filter((h: Hospital) => h.id === doctorHospitalId)
-          : data.data;
+        // Filter hospitals to only show the ones the doctor belongs to
+        const filteredHospitals =
+          doctorHospitalId.length > 0
+            ? data.data.filter((h: Hospital) => doctorHospitalId.includes(h.id))
+            : [];
         setHospitals(filteredHospitals);
       }
     } catch (error) {
@@ -176,17 +177,30 @@ export default function SessionsPage() {
     }
   };
 
-  // Fetch nurses - filter to show only nurses from doctor's hospital
+  // Fetch nurses - fetch from all doctor's hospitals
   const fetchNurses = async () => {
     try {
-      const url = doctorHospitalId
-        ? `/api/hospital/nurse?hospitalId=${doctorHospitalId}`
-        : "/api/hospital/nurse";
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.data && Array.isArray(data.data)) {
-        setNurses(data.data);
+      if (doctorHospitalId.length === 0) {
+        setNurses([]);
+        return;
       }
+
+      // Fetch nurses from all hospitals the doctor belongs to
+      const nursePromises = doctorHospitalId.map((hospitalId) =>
+        fetch(`/api/hospital/nurse?hospitalId=${hospitalId}`)
+          .then((res) => res.json())
+          .then((data) => data.data || [])
+      );
+
+      const nursesArrays = await Promise.all(nursePromises);
+      // Flatten and remove duplicates based on ID
+      const allNurses = nursesArrays.flat();
+      const uniqueNurses = allNurses.filter(
+        (nurse, index, self) =>
+          index === self.findIndex((n) => n.id === nurse.id)
+      );
+
+      setNurses(uniqueNurses);
     } catch (error) {
       console.error("Error fetching nurses:", error);
     }

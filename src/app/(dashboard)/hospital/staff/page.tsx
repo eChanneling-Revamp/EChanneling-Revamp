@@ -27,6 +27,7 @@ interface Doctor {
   availableDays: string[];
   isActive: boolean;
   status?: string;
+  hospitalId?: string[];
   createdAt: string;
   updatedAt: string;
 }

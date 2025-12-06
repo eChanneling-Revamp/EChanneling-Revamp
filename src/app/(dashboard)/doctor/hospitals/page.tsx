@@ -53,8 +53,8 @@ export default function DoctorHospitalsPage() {
           .then((data) => {
             if (data.data && data.data.id) {
               setDoctorId(data.data.id);
-              // Fetch hospitals for this doctor
-              fetchHospitals(data.data.hospitalId);
+              // Fetch hospitals for this doctor using hospitalId array
+              fetchHospitals(data.data.hospitalId || []);
             } else {
               console.error("Doctor not found");
               setLoading(false);
@@ -73,21 +73,21 @@ export default function DoctorHospitalsPage() {
     }
   }, []);
 
-  const fetchHospitals = async (hospitalId?: string) => {
+  const fetchHospitals = async (hospitalId: string[]) => {
     setLoading(true);
     try {
       const res = await fetch("/api/hospital");
       const data = await res.json();
 
       if (data.data && Array.isArray(data.data)) {
-        // Filter to show only the doctor's assigned hospital
-        if (hospitalId) {
-          const filtered = data.data.filter(
-            (h: Hospital) => h.id === hospitalId
+        // Filter to show only the doctor's assigned hospitals
+        if (hospitalId.length > 0) {
+          const filtered = data.data.filter((h: Hospital) =>
+            hospitalId.includes(h.id)
           );
           setHospitals(filtered);
         } else {
-          // If no hospitalId assigned, show empty list
+          // If no hospitalIds assigned, show empty list
           setHospitals([]);
         }
       }
