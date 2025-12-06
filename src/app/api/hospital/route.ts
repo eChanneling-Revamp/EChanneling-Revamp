@@ -28,10 +28,23 @@ export async function GET(req: NextRequest) {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
+        doctors: {
+          where: {
+            isActive: true,
+          },
           select: {
-            doctors: {
-              where: {
+            id: true,
+            assignedAt: true,
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                specialization: true,
+                qualification: true,
+                experience: true,
+                consultationFee: true,
+                rating: true,
                 isActive: true,
               },
             },
@@ -152,12 +165,12 @@ export async function POST(req: NextRequest) {
       code: error.code,
       meta: error.meta,
     });
-    
+
     // Return more specific error message
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
-        details: error.message || "Failed to create hospital"
+        details: error.message || "Failed to create hospital",
       },
       { status: 500 }
     );

@@ -62,11 +62,6 @@ export async function PUT(
     // Verify the doctor exists
     const existingDoctor = await prisma.doctor.findUnique({
       where: { id: doctorId },
-      include: {
-        hospitals: {
-          select: { email: true },
-        },
-      },
     });
 
     if (!existingDoctor) {
@@ -75,9 +70,47 @@ export async function PUT(
 
     // If only updating hospitalId (adding existing doctor to hospital)
     if (hospitalId && Object.keys(body).length === 1) {
+      // Get current hospitalId array
+      const currentHospitalId = existingDoctor.hospitalId || [];
+
+      // Check if hospital is already in the array
+      if (currentHospitalId.includes(hospitalId)) {
+        return NextResponse.json(
+          {
+            message: "Doctor is already assigned to this hospital",
+            data: existingDoctor,
+          },
+          { status: 200 }
+        );
+      }
+
+      // Add the hospital to the array
+      const updatedHospitalId = [...currentHospitalId, hospitalId];
+
+      // Update doctor and create DoctorHospital relationship
       const updatedDoctor = await prisma.doctor.update({
         where: { id: doctorId },
-        data: { hospitalId },
+        data: {
+          hospitalId: updatedHospitalId,
+        },
+      });
+
+      // Create the DoctorHospital relationship
+      await prisma.doctorHospital.upsert({
+        where: {
+          doctorId_hospitalId: {
+            doctorId: doctorId,
+            hospitalId: hospitalId,
+          },
+        },
+        create: {
+          doctorId: doctorId,
+          hospitalId: hospitalId,
+          isActive: true,
+        },
+        update: {
+          isActive: true,
+        },
       });
 
       return NextResponse.json(
@@ -86,17 +119,6 @@ export async function PUT(
           data: updatedDoctor,
         },
         { status: 200 }
-      );
-    }
-
-    // For full updates, verify the doctor belongs to the logged-in hospital
-    if (
-      existingDoctor.hospitals &&
-      existingDoctor.hospitals.email !== userEmail
-    ) {
-      return NextResponse.json(
-        { error: "You can only update doctors from your own hospital" },
-        { status: 403 }
       );
     }
 
@@ -202,38 +224,62 @@ export async function DELETE(
 
     const { id: doctorId } = await params;
 
-    // Verify the doctor exists and belongs to the logged-in hospital
+    // Get hospital ID from the logged-in user
+    const hospital = await prisma.hospital.findUnique({
+      where: { email: userEmail || "" },
+      select: { id: true },
+    });
+
+    if (!hospital) {
+      return NextResponse.json(
+        { error: "Hospital not found" },
+        { status: 404 }
+      );
+    }
+
+    // Verify the doctor exists
     const existingDoctor = await prisma.doctor.findUnique({
       where: { id: doctorId },
-      include: {
-        hospitals: {
-          select: { email: true },
-        },
-      },
     });
 
     if (!existingDoctor) {
       return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
     }
 
-    if (
-      !existingDoctor.hospitals ||
-      existingDoctor.hospitals.email !== userEmail
-    ) {
+    // Check if the doctor is assigned to this hospital
+    const currentHospitalId = existingDoctor.hospitalId || [];
+    if (!currentHospitalId.includes(hospital.id)) {
       return NextResponse.json(
-        { error: "You can only delete doctors from your own hospital" },
+        { error: "Doctor is not assigned to your hospital" },
         { status: 403 }
       );
     }
 
-    // Delete the doctor
-    await prisma.doctor.delete({
+    // Remove the hospital from the doctor's hospitalId array
+    const updatedHospitalId = currentHospitalId.filter(
+      (id) => id !== hospital.id
+    );
+
+    // Update the doctor
+    const updatedDoctor = await prisma.doctor.update({
       where: { id: doctorId },
+      data: {
+        hospitalId: updatedHospitalId,
+      },
+    });
+
+    // Deactivate or delete the DoctorHospital relationship
+    await prisma.doctorHospital.deleteMany({
+      where: {
+        doctorId: doctorId,
+        hospitalId: hospital.id,
+      },
     });
 
     return NextResponse.json(
       {
-        message: "Doctor deleted successfully",
+        message: "Doctor removed from hospital successfully",
+        data: updatedDoctor,
       },
       { status: 200 }
     );

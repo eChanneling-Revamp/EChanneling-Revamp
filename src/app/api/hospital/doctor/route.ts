@@ -122,12 +122,23 @@ export async function POST(req: NextRequest) {
                 .map((day) => day.trim())
                 .filter(Boolean)
             : availableDays || [],
-        hospitalId: hospitalId || null,
+        hospitalId: hospitalId ? [hospitalId] : [],
         isActive: true,
         status:
           userRole === "hospital" || createdByHospital ? "APPROVED" : "PENDING", // Auto-approve if created by hospital
       },
     });
+
+    // If hospitalId is provided, create the DoctorHospital relationship
+    if (hospitalId) {
+      await prisma.doctorHospital.create({
+        data: {
+          doctorId: doctor.id,
+          hospitalId: hospitalId,
+          isActive: true,
+        },
+      });
+    }
 
     return NextResponse.json(
       {
@@ -188,11 +199,31 @@ export async function GET(req: NextRequest) {
           description: true,
           languages: true,
           availableDays: true,
+          hospitalId: true,
           isActive: true,
           status: true,
-          hospitalId: true,
           createdAt: true,
           updatedAt: true,
+          hospitals: {
+            where: {
+              isActive: true,
+            },
+            select: {
+              id: true,
+              hospitalId: true,
+              assignedAt: true,
+              hospital: {
+                select: {
+                  id: true,
+                  name: true,
+                  address: true,
+                  city: true,
+                  contactNumber: true,
+                  email: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -212,7 +243,13 @@ export async function GET(req: NextRequest) {
     // If hospitalId is provided, filter by hospital
     // Otherwise, fetch all doctors
     const doctors = await prisma.doctor.findMany({
-      where: hospitalId ? { hospitalId: hospitalId } : {},
+      where: hospitalId
+        ? {
+            hospitalId: {
+              has: hospitalId, // Check if hospitalId exists in the hospitalId array
+            },
+          }
+        : {},
       select: {
         id: true,
         name: true,
@@ -230,14 +267,27 @@ export async function GET(req: NextRequest) {
         isActive: true,
         status: true,
         hospitalId: true,
-        hospitals: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         createdAt: true,
         updatedAt: true,
+        hospitals: {
+          where: {
+            isActive: true,
+          },
+          select: {
+            id: true,
+            hospitalId: true,
+            assignedAt: true,
+            hospital: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+                city: true,
+                contactNumber: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
