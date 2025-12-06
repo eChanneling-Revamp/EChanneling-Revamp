@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
         experience: true,
         profileImage: true,
         availableDays: true,
+        hospitalId: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
