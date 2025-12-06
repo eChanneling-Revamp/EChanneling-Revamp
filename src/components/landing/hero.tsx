@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
   const containerVariants = {
@@ -14,16 +14,16 @@ export default function Hero() {
         delayChildren: 0.3,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: "easeOut" },
+      transition: { duration: 0.8 },
     },
-  }
+  };
 
   return (
     <section
@@ -68,13 +68,31 @@ export default function Hero() {
           x: [0, -30, 0],
           y: [0, -50, 0],
         }}
-        transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, delay: 1 }}
+        transition={{
+          duration: 10,
+          repeat: Number.POSITIVE_INFINITY,
+          delay: 1,
+        }}
       />
 
-      <div style={{ position: "relative", maxWidth: "56rem", margin: "0 auto", textAlign: "center" }}>
-        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      <div
+        style={{
+          position: "relative",
+          maxWidth: "56rem",
+          margin: "0 auto",
+          textAlign: "center",
+        }}
+      >
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {/* Badge */}
-          <motion.div variants={itemVariants} style={{ marginBottom: "1.5rem" }}>
+          <motion.div
+            variants={itemVariants}
+            style={{ marginBottom: "1.5rem" }}
+          >
             <span
               style={{
                 display: "inline-block",
@@ -103,7 +121,8 @@ export default function Hero() {
             Connect with Healthcare{" "}
             <span
               style={{
-                background: "linear-gradient(to right, #0369a1, #06b6d4, #6366f1)",
+                background:
+                  "linear-gradient(to right, #0369a1, #06b6d4, #6366f1)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -123,8 +142,9 @@ export default function Hero() {
               margin: "0 auto 2rem",
             }}
           >
-            Book appointments with trusted healthcare providers, get professional consultations, and manage your health
-            with our seamless digital platform.
+            Book appointments with trusted healthcare providers, get
+            professional consultations, and manage your health with our seamless
+            digital platform.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -173,21 +193,45 @@ export default function Hero() {
           {/* Hero Stats */}
           <motion.div
             variants={itemVariants}
-            style={{ marginTop: "4rem", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2rem" }}
+            style={{
+              marginTop: "4rem",
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "2rem",
+            }}
           >
             {[
               { label: "50K+", value: "Active Users" },
               { label: "1000+", value: "Providers" },
               { label: "98%", value: "Satisfaction" },
             ].map((stat, i) => (
-              <motion.div key={i} style={{ padding: "1rem" }} whileHover={{ y: -5 }}>
-                <div style={{ fontSize: "1.875rem", fontWeight: "bold", color: "#0369a1" }}>{stat.label}</div>
-                <div style={{ fontSize: "0.875rem", color: "rgba(30, 41, 59, 0.6)" }}>{stat.value}</div>
+              <motion.div
+                key={i}
+                style={{ padding: "1rem" }}
+                whileHover={{ y: -5 }}
+              >
+                <div
+                  style={{
+                    fontSize: "1.875rem",
+                    fontWeight: "bold",
+                    color: "#0369a1",
+                  }}
+                >
+                  {stat.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "rgba(30, 41, 59, 0.6)",
+                  }}
+                >
+                  {stat.value}
+                </div>
               </motion.div>
             ))}
           </motion.div>
         </motion.div>
       </div>
     </section>
-  )
+  );
 }
