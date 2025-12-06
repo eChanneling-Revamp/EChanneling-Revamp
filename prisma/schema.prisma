@@ -65,28 +65,28 @@ model User {
 }
 
 model Doctor {
-  id              String          @id @default(cuid())
+  id              String           @id @default(cuid())
   name            String
-  email           String          @unique
+  email           String           @unique
   specialization  String
   qualification   String
   experience      Int
   phonenumber     String
-  consultationFee Decimal         @db.Decimal(10, 2)
-  rating          Decimal?        @db.Decimal(3, 2)
+  consultationFee Decimal          @db.Decimal(10, 2)
+  rating          Decimal?         @db.Decimal(3, 2)
   profileImage    String?
   description     String?
   languages       String[]
   availableDays   String[]
-  isActive        Boolean         @default(true)
-  hospitalId      String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  status          doctor_status   @default(PENDING)
-  hospitals       Hospital?       @relation(fields: [hospitalId], references: [id])
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  status          doctor_status    @default(PENDING)
+  hospitalId      String[]         @default([]) @map("hospitalIds")
+  hospitals       DoctorHospital[]
+  prescriptions   Prescription[]
   sessions        Session[]
   time_slots      time_slots[]
-  prescriptions   Prescription[]
 
   @@map("doctors")
 }
@@ -111,21 +111,21 @@ model Nurse_Detail {
 }
 
 model Hospital {
-  id            String          @id @default(cuid())
+  id            String           @id @default(cuid())
   name          String
   address       String
   city          String
   district      String
   contactNumber String
-  email         String          @unique
+  email         String           @unique
   website       String?
   facilities    String[]
-  isActive      Boolean         @default(true)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  status        hospital_status @default(PENDING)
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  status        hospital_status  @default(PENDING)
   profileImage  String?
-  doctors       Doctor[]
+  doctors       DoctorHospital[]
   nurse_details Nurse_Detail[]
   nurses        Nurse[]
   sessions      Session[]
@@ -201,7 +201,7 @@ model Prescription {
   appointmentId        String
   patientEmail         String
   doctorId             String
-  htmlContent          String             @db.Text
+  htmlContent          String
   status               PrescriptionStatus @default(ACTIVE)
   version              Int                @default(1)
   parentPrescriptionId String?
@@ -783,10 +783,22 @@ enum hospital_status {
   APPROVED
   REJECTED
 }
-
 enum PrescriptionStatus {
   ACTIVE
   REVISED
   CANCELLED
   COMPLETED
+}
+
+model DoctorHospital {
+  id         String   @id @default(cuid())
+  doctorId   String
+  hospitalId String
+  assignedAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+  doctor     Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, hospitalId])
+  @@map("doctor_hospitals")
 }
