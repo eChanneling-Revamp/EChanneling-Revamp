@@ -44,6 +44,7 @@ interface Hospital {
 interface Nurse {
   id: string;
   name: string;
+  hospitalId: string;
 }
 
 export default function SessionsPage() {
@@ -81,6 +82,17 @@ export default function SessionsPage() {
     location: "",
     status: "scheduled",
   });
+
+  // Helper function to format datetime for datetime-local input
+  const formatDateTimeLocal = (date: string | Date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
 
   // Fetch sessions for this doctor
   const fetchSessions = async () => {
@@ -879,7 +891,12 @@ export default function SessionsPage() {
                       <select
                         value={form.hospitalId}
                         onChange={(e) =>
-                          setForm({ ...form, hospitalId: e.target.value })
+                          setForm({
+                            ...form,
+                            hospitalId: e.target.value,
+                            nurseId: "", // Clear nurse selection when hospital changes
+                            nurseName: "",
+                          })
                         }
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         required
@@ -913,13 +930,24 @@ export default function SessionsPage() {
                         }}
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         required
+                        disabled={!form.hospitalId}
                       >
-                        <option value="">Choose a nurse</option>
-                        {nurses.map((nurse) => (
-                          <option key={nurse.id} value={nurse.id}>
-                            {nurse.name}
-                          </option>
-                        ))}
+                        <option value="">
+                          {!form.hospitalId
+                            ? "Select a hospital first"
+                            : "Choose a nurse"}
+                        </option>
+                        {nurses
+                          .filter(
+                            (nurse: any) =>
+                              !form.hospitalId ||
+                              nurse.hospitalId === form.hospitalId
+                          )
+                          .map((nurse) => (
+                            <option key={nurse.id} value={nurse.id}>
+                              {nurse.name}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>
@@ -1260,9 +1288,7 @@ export default function SessionsPage() {
                         type="datetime-local"
                         defaultValue={
                           selectedSession.startTime
-                            ? new Date(selectedSession.startTime)
-                                .toISOString()
-                                .slice(0, 16)
+                            ? formatDateTimeLocal(selectedSession.startTime)
                             : ""
                         }
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
@@ -1279,9 +1305,7 @@ export default function SessionsPage() {
                         type="datetime-local"
                         defaultValue={
                           selectedSession.endTime
-                            ? new Date(selectedSession.endTime)
-                                .toISOString()
-                                .slice(0, 16)
+                            ? formatDateTimeLocal(selectedSession.endTime)
                             : ""
                         }
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
