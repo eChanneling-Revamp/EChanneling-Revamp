@@ -131,12 +131,16 @@ export default function AddStaffPage() {
         // Filter to only show approved doctors who are not assigned to this hospital
         const availableDoctors = response.data.data.filter((doctor: any) => {
           const isApproved = doctor.status === "APPROVED";
-          // Check both hospitalId field and hospitals relation
-          const doctorHospitalId = doctor.hospitalId || doctor.hospitals?.id;
+          // Check if this hospital is NOT in the doctor's hospitalId array
+          const doctorHospitalIds = doctor.hospitalId || [];
           const notAssignedToThisHospital =
-            !doctorHospitalId || doctorHospitalId !== hospitalId;
+            !doctorHospitalIds.includes(hospitalId);
           console.log(
-            `Doctor ${doctor.name}: approved=${isApproved}, hospitalId=${doctor.hospitalId}, hospitals.id=${doctor.hospitals?.id}, currentHospitalId=${hospitalId}, notAssigned=${notAssignedToThisHospital}`
+            `Doctor ${
+              doctor.name
+            }: approved=${isApproved}, hospitalId=${JSON.stringify(
+              doctorHospitalIds
+            )}, currentHospitalId=${hospitalId}, notAssigned=${notAssignedToThisHospital}`
           );
           return isApproved && notAssignedToThisHospital;
         });
@@ -402,6 +406,11 @@ export default function AddStaffPage() {
         return;
       }
 
+      // Find the selected doctor's details
+      const selectedDoctor = approvedDoctors.find(
+        (doc) => doc.id === selectedDoctorId
+      );
+
       // Update the doctor's hospitalId
       const response = await axios.put(
         `/api/hospital/doctor/${selectedDoctorId}`,
@@ -411,6 +420,18 @@ export default function AddStaffPage() {
       );
 
       if (response.data) {
+        // Send email notification to the doctor
+        try {
+          await axios.post("/api/email/doctor-added", {
+            doctorEmail: selectedDoctor.email,
+            doctorName: selectedDoctor.name,
+            hospitalName: hospitalName,
+          });
+        } catch (emailError) {
+          console.error("Failed to send email notification:", emailError);
+          // Don't fail the entire operation if email fails
+        }
+
         setSuccess("Doctor added to hospital successfully!");
         setTimeout(() => {
           router.push("/hospital/staff");
