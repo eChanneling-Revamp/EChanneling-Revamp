@@ -35,6 +35,8 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Session {
   id: string;
@@ -230,7 +232,7 @@ export default function SessionsPage() {
   // Delete session
   const handleDeleteSession = async (id: string) => {
     if (
-      !confirm(
+      !window.confirm(
         "Are you sure you want to delete this session? This action cannot be undone."
       )
     )
@@ -243,17 +245,17 @@ export default function SessionsPage() {
       });
 
       if (res.ok) {
-        alert("Session deleted successfully!");
+        toast.success("Session deleted successfully!");
         fetchSessions();
       } else {
         const errorData = await res.json();
-        alert(
+        toast.error(
           `Failed to delete session: ${errorData.message || "Unknown error"}`
         );
       }
     } catch (error) {
       console.error("Error deleting session:", error);
-      alert("Failed to delete session");
+      toast.error("Failed to delete session");
     } finally {
       setIsDeleting(null);
     }
@@ -294,19 +296,19 @@ export default function SessionsPage() {
       });
 
       if (res.ok) {
-        alert("Session updated successfully!");
+        toast.success("Session updated successfully!");
         setIsEditDialogOpen(false);
         setSelectedSession(null);
         fetchSessions();
       } else {
         const errorData = await res.json();
-        alert(
+        toast.error(
           `Error updating session: ${errorData.message || "Unknown error"}`
         );
       }
     } catch (error) {
       console.error("Error updating session:", error);
-      alert("Failed to update session");
+      toast.error("Failed to update session");
     } finally {
       setIsUpdating(false);
     }
@@ -316,12 +318,12 @@ export default function SessionsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.doctorId || !form.nurseId || !form.startTime || !form.endTime) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
 
     if (!hospitalId) {
-      alert("Hospital information not found");
+      toast.error("Hospital information not found");
       return;
     }
 
@@ -342,7 +344,7 @@ export default function SessionsPage() {
       }),
     });
     if (res.ok) {
-      alert("Session created successfully!");
+      toast.success("Session created successfully!");
       setForm({
         doctorId: "",
         doctorName: "",
@@ -360,7 +362,9 @@ export default function SessionsPage() {
       fetchSessions();
     } else {
       const errorData = await res.json();
-      alert(`Error creating session: ${errorData.message || "Unknown error"}`);
+      toast.error(
+        `Error creating session: ${errorData.message || "Unknown error"}`
+      );
     }
   };
 
@@ -1561,6 +1565,19 @@ export default function SessionsPage() {
           </div>
         </div>
       )}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }
