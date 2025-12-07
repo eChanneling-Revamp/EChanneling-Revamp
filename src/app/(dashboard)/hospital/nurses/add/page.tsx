@@ -13,6 +13,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { ToastContainer } from "@/components/ui/toast-container";
 
 const languageOptions = ["English", "Sinhala", "Tamil"];
 const daysOfWeek = [
@@ -42,8 +44,6 @@ export default function AddNursePage() {
 
   const [hospitalId, setHospitalId] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     // Get hospital data from localStorage
@@ -66,7 +66,7 @@ export default function AddNursePage() {
       }
     } catch (error) {
       console.error("Error fetching hospital ID:", error);
-      setError("Failed to load hospital information");
+      toast.error("Failed to load hospital information");
     }
   };
 
@@ -89,12 +89,10 @@ export default function AddNursePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
-    setError("");
-    setSuccess("");
 
     try {
       if (!hospitalId) {
-        setError(
+        toast.error(
           "Hospital information not found. Please complete your hospital setup first."
         );
         setSubmitLoading(false);
@@ -114,20 +112,20 @@ export default function AddNursePage() {
       const response = await axios.post("/api/hospital/nurse", nurseData);
 
       if (response.data) {
-        setSuccess("Nurse added successfully!");
+        toast.success("Nurse added successfully!");
         setTimeout(() => {
           router.push("/hospital/nurses");
         }, 1500);
       }
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
-        setError(
+        toast.error(
           err.response?.data?.error ||
             err.response?.data?.message ||
             "Failed to add nurse"
         );
       } else {
-        setError("A network error occurred.");
+        toast.error("A network error occurred.");
       }
     } finally {
       setSubmitLoading(false);
@@ -171,18 +169,6 @@ export default function AddNursePage() {
             </div>
           </div>
         </div>
-
-        {/* Messages */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-            {success}
-          </div>
-        )}
 
         {/* Form */}
         <form
@@ -374,6 +360,8 @@ export default function AddNursePage() {
           </div>
         </form>
       </div>
+
+      <ToastContainer />
     </div>
   );
 }
