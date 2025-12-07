@@ -13,6 +13,8 @@ import {
   X,
 } from "lucide-react";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface HospitalData {
   id: string;
@@ -37,8 +39,6 @@ export function HospitalProfileForm({ userEmail }: HospitalProfileFormProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [hospitalData, setHospitalData] = useState<HospitalData | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -108,7 +108,7 @@ export function HospitalProfileForm({ userEmail }: HospitalProfileFormProps) {
       }
     } catch (error: any) {
       console.error("Error fetching hospital data:", error);
-      setError("Failed to load hospital data");
+      toast.error("Failed to load hospital data");
     } finally {
       setIsLoading(false);
     }
@@ -145,13 +145,11 @@ export function HospitalProfileForm({ userEmail }: HospitalProfileFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
     setIsSaving(true);
 
     try {
       if (!hospitalData?.id) {
-        setError("Hospital ID not found");
+        toast.error("Hospital ID not found");
         return;
       }
 
@@ -161,23 +159,20 @@ export function HospitalProfileForm({ userEmail }: HospitalProfileFormProps) {
       );
 
       if (response.data) {
-        setSuccess("Hospital profile updated successfully!");
+        toast.success("Hospital profile updated successfully!");
         setHospitalData(response.data.data);
         setIsEditing(false);
-
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccess(""), 3000);
       }
     } catch (error: any) {
       console.error("Error updating hospital:", error);
       if (axios.isAxiosError(error)) {
-        setError(
+        toast.error(
           error.response?.data?.error ||
             error.response?.data?.message ||
             "Failed to update hospital profile"
         );
       } else {
-        setError("An error occurred while updating hospital profile");
+        toast.error("An error occurred while updating hospital profile");
       }
     } finally {
       setIsSaving(false);
@@ -198,8 +193,6 @@ export function HospitalProfileForm({ userEmail }: HospitalProfileFormProps) {
       });
     }
     setIsEditing(false);
-    setError("");
-    setSuccess("");
   };
 
   if (isLoading) {
@@ -246,18 +239,6 @@ export function HospitalProfileForm({ userEmail }: HospitalProfileFormProps) {
             </button>
           )}
         </div>
-
-        {/* Messages */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-            {success}
-          </div>
-        )}
 
         {/* Form */}
         <form
@@ -541,6 +522,19 @@ export function HospitalProfileForm({ userEmail }: HospitalProfileFormProps) {
           </div>
         </div>
       </div>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }
