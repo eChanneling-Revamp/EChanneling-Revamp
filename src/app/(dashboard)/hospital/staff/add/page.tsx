@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { specializations } from "@/data/specializations";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const daysOfWeek = [
   "Monday",
@@ -87,8 +89,6 @@ export default function AddStaffPage() {
     role: "nurse",
   });
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     // Get hospital data from localStorage
@@ -120,7 +120,7 @@ export default function AddStaffPage() {
       }
     } catch (error) {
       console.error("Error fetching hospital ID:", error);
-      setError("Failed to load hospital information");
+      toast.error("Failed to load hospital information");
     }
   };
 
@@ -279,12 +279,10 @@ export default function AddStaffPage() {
   const handleDoctorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
-    setError("");
-    setSuccess("");
 
     try {
       if (!hospitalId) {
-        setError(
+        toast.error(
           "Hospital information not found. Please complete your hospital setup first."
         );
         setSubmitLoading(false);
@@ -351,7 +349,7 @@ export default function AddStaffPage() {
         hospitalName: hospitalName,
       });
 
-      setSuccess(
+      toast.success(
         "Doctor account created successfully! Login credentials have been sent to their email."
       );
       setTimeout(() => {
@@ -376,9 +374,9 @@ export default function AddStaffPage() {
           errorMessage = err.response.data.detail;
         }
 
-        setError(errorMessage);
+        toast.error(errorMessage);
       } else {
-        setError("A network error occurred: " + err.message);
+        toast.error("A network error occurred: " + err.message);
       }
     } finally {
       setSubmitLoading(false);
@@ -388,12 +386,10 @@ export default function AddStaffPage() {
   const handleAddExistingDoctor = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
-    setError("");
-    setSuccess("");
 
     try {
       if (!hospitalId) {
-        setError(
+        toast.error(
           "Hospital information not found. Please complete your hospital setup first."
         );
         setSubmitLoading(false);
@@ -401,7 +397,7 @@ export default function AddStaffPage() {
       }
 
       if (!selectedDoctorId) {
-        setError("Please select a doctor to add.");
+        toast.error("Please select a doctor to add.");
         setSubmitLoading(false);
         return;
       }
@@ -432,20 +428,20 @@ export default function AddStaffPage() {
           // Don't fail the entire operation if email fails
         }
 
-        setSuccess("Doctor added to hospital successfully!");
+        toast.success("Doctor added to hospital successfully!");
         setTimeout(() => {
           router.push("/hospital/staff");
         }, 1500);
       }
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
-        setError(
+        toast.error(
           err.response?.data?.error ||
             err.response?.data?.message ||
             "Failed to add doctor"
         );
       } else {
-        setError("A network error occurred.");
+        toast.error("A network error occurred.");
       }
     } finally {
       setSubmitLoading(false);
@@ -455,12 +451,10 @@ export default function AddStaffPage() {
   const handleNurseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
-    setError("");
-    setSuccess("");
 
     try {
       if (!hospitalId) {
-        setError(
+        toast.error(
           "Hospital information not found. Please complete your hospital setup first."
         );
         setSubmitLoading(false);
@@ -520,7 +514,7 @@ export default function AddStaffPage() {
         hospitalName: hospitalName,
       });
 
-      setSuccess(
+      toast.success(
         "Nurse account created successfully! Login credentials have been sent to their email."
       );
       setTimeout(() => {
@@ -545,9 +539,9 @@ export default function AddStaffPage() {
           errorMessage = err.response.data.detail;
         }
 
-        setError(errorMessage);
+        toast.error(errorMessage);
       } else {
-        setError("A network error occurred: " + err.message);
+        toast.error("A network error occurred: " + err.message);
       }
     } finally {
       setSubmitLoading(false);
@@ -602,8 +596,6 @@ export default function AddStaffPage() {
           <button
             onClick={() => {
               setActiveTab("doctor");
-              setError("");
-              setSuccess("");
             }}
             className={`px-6 py-3 rounded-md text-sm font-medium transition-all ${
               activeTab === "doctor"
@@ -616,8 +608,6 @@ export default function AddStaffPage() {
           <button
             onClick={() => {
               setActiveTab("nurse");
-              setError("");
-              setSuccess("");
             }}
             className={`px-6 py-3 rounded-md text-sm font-medium transition-all ${
               activeTab === "nurse"
@@ -629,18 +619,6 @@ export default function AddStaffPage() {
           </button>
         </div>
 
-        {/* Messages */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-            {success}
-          </div>
-        )}
-
         {/* Doctor Form */}
         {activeTab === "doctor" && (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -650,8 +628,6 @@ export default function AddStaffPage() {
                 <button
                   onClick={() => {
                     setDoctorSubTab("existing");
-                    setError("");
-                    setSuccess("");
                   }}
                   className={`px-6 py-3 rounded-t-lg text-sm font-medium transition-all ${
                     doctorSubTab === "existing"
@@ -664,8 +640,6 @@ export default function AddStaffPage() {
                 <button
                   onClick={() => {
                     setDoctorSubTab("manual");
-                    setError("");
-                    setSuccess("");
                   }}
                   className={`px-6 py-3 rounded-t-lg text-sm font-medium transition-all ${
                     doctorSubTab === "manual"
@@ -1242,6 +1216,18 @@ export default function AddStaffPage() {
           </form>
         )}
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }
