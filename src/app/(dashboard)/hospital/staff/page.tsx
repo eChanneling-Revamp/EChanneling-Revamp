@@ -10,6 +10,8 @@ import NurseCard from "@/components/staff/NurseCard";
 import EditDoctorDialog from "@/components/staff/EditDoctorDialog";
 import EditNurseDialog from "@/components/staff/EditNurseDialog";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Doctor {
   phonenumber: string;
@@ -55,7 +57,6 @@ export default function HospitalStaffPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [nurses, setNurses] = useState<Nurse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [hospitalId, setHospitalId] = useState("");
   const [activeTab, setActiveTab] = useState<"doctor" | "nurse">("doctor");
 
@@ -91,12 +92,12 @@ export default function HospitalStaffPage() {
         fetchDoctors(hospitalId);
         fetchNurses(hospitalId);
       } else {
-        setError("Hospital information not found");
+        toast.error("Hospital information not found");
         setIsLoading(false);
       }
     } catch (error) {
       console.error("Error fetching hospital data:", error);
-      setError("Failed to load hospital information");
+      toast.error("Failed to load hospital information");
       setIsLoading(false);
     }
   };
@@ -112,7 +113,7 @@ export default function HospitalStaffPage() {
       }
     } catch (error) {
       console.error("Error fetching doctors:", error);
-      setError("Failed to load doctors");
+      toast.error("Failed to load doctors");
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +129,7 @@ export default function HospitalStaffPage() {
       }
     } catch (error) {
       console.error("Error fetching nurses:", error);
-      setError("Failed to load nurses");
+      toast.error("Failed to load nurses");
     }
   };
 
@@ -142,19 +143,20 @@ export default function HospitalStaffPage() {
   };
 
   const handleDelete = async (doctorId: string) => {
-    if (!confirm("Are you sure you want to delete this doctor?")) {
+    if (!window.confirm("Are you sure you want to delete this doctor?")) {
       return;
     }
 
     try {
       await axios.delete(`/api/hospital/doctor/${doctorId}`);
+      toast.success("Doctor deleted successfully");
       // Refresh the doctors list
       if (hospitalId) {
         fetchDoctors(hospitalId);
       }
     } catch (error: any) {
       console.error("Error deleting doctor:", error);
-      alert(
+      toast.error(
         error.response?.data?.error ||
           error.response?.data?.message ||
           "Failed to delete doctor"
@@ -163,19 +165,20 @@ export default function HospitalStaffPage() {
   };
 
   const handleNurseDelete = async (nurseId: string) => {
-    if (!confirm("Are you sure you want to delete this nurse?")) {
+    if (!window.confirm("Are you sure you want to delete this nurse?")) {
       return;
     }
 
     try {
       await axios.delete(`/api/hospital/nurse/${nurseId}`);
+      toast.success("Nurse deleted successfully");
       // Refresh the nurses list
       if (hospitalId) {
         fetchNurses(hospitalId);
       }
     } catch (error: any) {
       console.error("Error deleting nurse:", error);
-      alert(
+      toast.error(
         error.response?.data?.error ||
           error.response?.data?.message ||
           "Failed to delete nurse"
@@ -271,12 +274,6 @@ export default function HospitalStaffPage() {
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
           Our Medical Staff
         </h2>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
 
         {/* Tabs */}
         <div className="mb-6 bg-white rounded-lg shadow-sm p-1 inline-flex">
@@ -475,6 +472,19 @@ export default function HospitalStaffPage() {
         onClose={() => setIsEditNurseDialogOpen(false)}
         nurse={selectedNurse}
         onSuccess={handleNurseEditSuccess}
+      />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
       />
     </div>
   );
