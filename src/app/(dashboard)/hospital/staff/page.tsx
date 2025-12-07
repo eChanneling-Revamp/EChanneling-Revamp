@@ -10,8 +10,8 @@ import NurseCard from "@/components/staff/NurseCard";
 import EditDoctorDialog from "@/components/staff/EditDoctorDialog";
 import EditNurseDialog from "@/components/staff/EditNurseDialog";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import { ToastContainer } from "@/components/ui/toast-container";
 
 interface Doctor {
   phonenumber: string;
@@ -474,18 +474,7 @@ export default function HospitalStaffPage() {
         onSuccess={handleNurseEditSuccess}
       />
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <ToastContainer />
     </div>
   );
 }

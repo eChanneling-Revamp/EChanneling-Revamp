@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { specializations } from "@/data/specializations";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import { ToastContainer } from "@/components/ui/toast-container";
 
 const daysOfWeek = [
   "Monday",
@@ -1216,18 +1216,7 @@ export default function AddStaffPage() {
           </form>
         )}
       </div>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <ToastContainer />
     </div>
   );
 }
