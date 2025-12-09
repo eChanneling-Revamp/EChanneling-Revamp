@@ -257,8 +257,9 @@ export default function ProfileTab({
                       id="specialization"
                       name="specialization"
                       value={formData.specialization}
-                      onChange={handleChange}
-                      className="h-11 pl-10"
+                      readOnly
+                      disabled
+                      className="h-11 pl-10 bg-gray-50"
                     />
                   </div>
                 </div>
