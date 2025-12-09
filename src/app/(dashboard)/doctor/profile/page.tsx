@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileTab from "@/components/doctor/ProfileTab";
+import QualificationsTab from "@/components/doctor/QualificationsTab";
 import { useDoctorStatus } from "@/hooks/useDoctorStatus";
 import PendingApprovalScreen from "@/components/doctor/PendingApprovalScreen";
 import { Loader2 } from "lucide-react";
@@ -106,11 +107,9 @@ export default function DoctorProfilePage() {
             />
           </TabsContent>
 
-          {/* Qualifications Tab (Placeholder) */}
+          {/* Qualifications Tab */}
           <TabsContent value="qualifications">
-            <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-              <p className="text-gray-500">Qualifications section coming soon...</p>
-            </div>
+            <QualificationsTab />
           </TabsContent>
 
           {/* Security Tab (Placeholder) */}
