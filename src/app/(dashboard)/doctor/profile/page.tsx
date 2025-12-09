@@ -81,16 +81,16 @@ export default function DoctorProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Profile</h1>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-4 sm:mb-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="qualifications">Qualifications</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>

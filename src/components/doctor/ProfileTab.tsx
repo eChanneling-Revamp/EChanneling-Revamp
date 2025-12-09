@@ -120,9 +120,9 @@ export default function ProfileTab({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
       {/* Left Column */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Profile Photo */}
         <Card>
           <CardHeader>
