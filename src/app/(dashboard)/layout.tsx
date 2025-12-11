@@ -96,7 +96,7 @@ const hospitalAdminMenu = [
   {
     title: "My Profile",
     icon: <UserCircle className="w-5 h-5" />,
-    path: "/profile",
+    path: "/hospital/myprofile",
   },
 ];
 
