@@ -14,7 +14,26 @@ export async function GET(
         { message: "Session not found" },
         { status: 404 }
       );
-    return NextResponse.json(session);
+
+    // Transform session to include flat fields
+    const transformedSession = {
+      id: (session as any).id,
+      doctorId: (session as any).doctorId,
+      doctorName: (session as any).doctors?.name || "Unknown Doctor",
+      nurseId: (session as any).nurseId,
+      nurseName: (session as any).nurse_details?.name || "Unknown Nurse",
+      nurseDetailId: (session as any).nurseId,
+      capacity: (session as any).capacity,
+      location: (session as any).location,
+      hospitalId: (session as any).hospitalId,
+      status: (session as any).status,
+      createdAt: (session as any).createdAt,
+      startTime: (session as any).startTime,
+      endTime: (session as any).endTime,
+      scheduledAt: (session as any).scheduledAt,
+    };
+
+    return NextResponse.json(transformedSession);
   } catch (err: any) {
     console.error("🔥 GET /api/sessions/[id] error:", err);
     return NextResponse.json(
@@ -55,7 +74,25 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedSession);
+    // Transform session to include flat fields
+    const transformedSession = {
+      id: (updatedSession as any).id,
+      doctorId: (updatedSession as any).doctorId,
+      doctorName: (updatedSession as any).doctors?.name || "Unknown Doctor",
+      nurseId: (updatedSession as any).nurseId,
+      nurseName: (updatedSession as any).nurse_details?.name || "Unknown Nurse",
+      nurseDetailId: (updatedSession as any).nurseId,
+      capacity: (updatedSession as any).capacity,
+      location: (updatedSession as any).location,
+      hospitalId: (updatedSession as any).hospitalId,
+      status: (updatedSession as any).status,
+      createdAt: (updatedSession as any).createdAt,
+      startTime: (updatedSession as any).startTime,
+      endTime: (updatedSession as any).endTime,
+      scheduledAt: (updatedSession as any).scheduledAt,
+    };
+
+    return NextResponse.json(transformedSession);
   } catch (err: any) {
     console.error("Error updating session:", err);
     return NextResponse.json(

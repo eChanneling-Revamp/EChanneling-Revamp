@@ -16,7 +16,26 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const session = await createSession(body);
-    return NextResponse.json(session, { status: 201 });
+
+    // Transform session to include flat fields
+    const transformedSession = {
+      id: (session as any).id,
+      doctorId: (session as any).doctorId,
+      doctorName: (session as any).doctors?.name || "Unknown Doctor",
+      nurseId: (session as any).nurseId,
+      nurseName: (session as any).nurse_details?.name || "Unknown Nurse",
+      nurseDetailId: (session as any).nurseId,
+      capacity: (session as any).capacity,
+      location: (session as any).location,
+      hospitalId: (session as any).hospitalId,
+      status: (session as any).status,
+      createdAt: (session as any).createdAt,
+      startTime: (session as any).startTime,
+      endTime: (session as any).endTime,
+      scheduledAt: (session as any).scheduledAt,
+    };
+
+    return NextResponse.json(transformedSession, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ message: err.message }, { status: 500 });
   }
@@ -29,7 +48,26 @@ export async function GET(req: Request) {
     const hospitalId = searchParams.get("hospitalId");
 
     const sessions = await getAllSessions(doctorId, hospitalId);
-    return NextResponse.json(sessions);
+
+    // Transform sessions to include flat doctorName and nurseName fields
+    const transformedSessions = sessions.map((session: any) => ({
+      id: session.id,
+      doctorId: session.doctorId,
+      doctorName: session.doctors?.name || "Unknown Doctor",
+      nurseId: session.nurseId,
+      nurseName: session.nurse_details?.name || "Unknown Nurse",
+      nurseDetailId: session.nurseId,
+      capacity: session.capacity,
+      location: session.location,
+      hospitalId: session.hospitalId,
+      status: session.status,
+      createdAt: session.createdAt,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      scheduledAt: session.scheduledAt,
+    }));
+
+    return NextResponse.json(transformedSessions);
   } catch (err: any) {
     return NextResponse.json({ message: err.message }, { status: 500 });
   }
