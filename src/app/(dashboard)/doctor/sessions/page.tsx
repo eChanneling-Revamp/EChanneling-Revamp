@@ -1038,10 +1038,10 @@ export default function SessionsPage() {
                         }
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       >
-                        <option value="scheduled">Scheduled</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="SCHEDULED">Scheduled</option>
+                        <option value="PAUSED">Paused</option>
+                        <option value="ONGOING">Ongoing</option>
+                        <option value="ENDED">Ended</option>
                       </select>
                     </div>
                   </div>
@@ -1356,10 +1356,10 @@ export default function SessionsPage() {
                         defaultValue={selectedSession.status || "SCHEDULED"}
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       >
-                        <option value="scheduled">Scheduled</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="SCHEDULED">Scheduled</option>
+                        <option value="PAUSED">Paused</option>
+                        <option value="ONGOING">Ongoing</option>
+                        <option value="ENDED">Ended</option>
                       </select>
                     </div>
                   </div>
