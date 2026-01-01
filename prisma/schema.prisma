@@ -25,7 +25,7 @@ model Nurse {
   twoFactorMethod    String?
   twoFactorUpdatedAt DateTime? @db.Date
   phone              String?   @db.VarChar(20)
-  username           String
+  username           String?
   age                String?
   hospitals          Hospital? @relation(fields: [hospitalId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "hospitalId")
 
@@ -140,7 +140,7 @@ model Session {
   capacity      Int           @default(5)
   location      String
   hospitalId    String
-  status        String        @default("scheduled")
+  status        SessionStatus @default(SCHEDULED)
   createdAt     DateTime      @default(now()) @db.Timestamp(6)
   scheduledAt   DateTime      @db.Timestamp(6)
   startTime     DateTime      @db.Timestamp(6)
@@ -788,6 +788,13 @@ enum PrescriptionStatus {
   REVISED
   CANCELLED
   COMPLETED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  PAUSED
+  ONGOING
+  ENDED
 }
 
 model DoctorHospital {

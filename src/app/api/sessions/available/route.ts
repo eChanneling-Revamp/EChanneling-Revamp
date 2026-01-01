@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const date = searchParams.get("date");
 
     const where: any = {
-      status: "scheduled",
+      status: "SCHEDULED",
     };
 
     if (doctorId) where.doctorId = doctorId;

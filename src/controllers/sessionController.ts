@@ -11,7 +11,7 @@ export async function createSession(data: any) {
       capacity: data.capacity || 5,
       location: data.location,
       hospitalId: data.hospitalId,
-      status: data.status || "scheduled",
+      status: data.status || "SCHEDULED",
       scheduledAt: new Date(data.startTime),
       startTime: new Date(data.startTime),
       endTime: new Date(data.endTime),

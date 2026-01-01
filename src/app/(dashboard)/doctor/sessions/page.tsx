@@ -80,7 +80,7 @@ export default function SessionsPage() {
     endTime: "",
     capacity: "20",
     location: "",
-    status: "scheduled",
+    status: "SCHEDULED",
   });
 
   // Helper function to format datetime for datetime-local input
@@ -266,7 +266,7 @@ export default function SessionsPage() {
         endTime: new Date(formData.get("endTime") as string).toISOString(),
         capacity: parseInt(formData.get("capacity") as string) || 20,
         location: (formData.get("location") as string) || null,
-        status: (formData.get("status") as string) || "scheduled",
+        status: (formData.get("status") as string) || "SCHEDULED",
       };
 
       // Find selected nurse name
@@ -328,7 +328,7 @@ export default function SessionsPage() {
         endTime: new Date(form.endTime).toISOString(),
         capacity: parseInt(form.capacity) || 20,
         location: form.location || null,
-        status: form.status || "scheduled",
+        status: form.status || "SCHEDULED",
       }),
     });
     if (res.ok) {
@@ -1174,7 +1174,7 @@ export default function SessionsPage() {
                       Status
                     </p>
                     <p className="text-base text-gray-900 mt-1 capitalize">
-                      {selectedSession.status || "scheduled"}
+                      {selectedSession.status || "SCHEDULED"}
                     </p>
                   </div>
                 </div>
@@ -1353,7 +1353,7 @@ export default function SessionsPage() {
                       </label>
                       <select
                         name="status"
-                        defaultValue={selectedSession.status || "scheduled"}
+                        defaultValue={selectedSession.status || "SCHEDULED"}
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                       >
                         <option value="scheduled">Scheduled</option>

@@ -63,7 +63,7 @@ export async function PUT(
         capacity: body.capacity || 5,
         location: body.location,
         hospitalId: body.hospitalId,
-        status: body.status || "scheduled",
+        status: body.status || "SCHEDULED",
         startTime: body.startTime ? new Date(body.startTime) : undefined,
         endTime: body.endTime ? new Date(body.endTime) : undefined,
       },
