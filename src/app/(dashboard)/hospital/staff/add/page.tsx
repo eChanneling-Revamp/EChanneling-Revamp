@@ -316,21 +316,18 @@ export default function AddStaffPage() {
         gender: doctorSignupData.gender.toLowerCase(),
       });
 
-      const signupResponse = await axios.post(
-        "https://dpdlab1.slt.lk:8645/auth/api/auth/register",
-        {
-          first_name: firstName,
-          last_name: lastName,
-          email: doctorSignupData.email,
-          password: generatedPassword,
-          confirm_password: generatedPassword,
-          phone_number: doctorSignupData.phonenumber,
-          nic: doctorSignupData.nic,
-          role: "doctor",
-          age: parseInt(doctorSignupData.age),
-          gender: doctorSignupData.gender.toLowerCase(),
-        }
-      );
+      const signupResponse = await axios.post("/api/external-auth/register", {
+        first_name: firstName,
+        last_name: lastName,
+        email: doctorSignupData.email,
+        password: generatedPassword,
+        confirm_password: generatedPassword,
+        phone_number: doctorSignupData.phonenumber,
+        nic: doctorSignupData.nic,
+        role: "doctor",
+        age: parseInt(doctorSignupData.age),
+        gender: doctorSignupData.gender.toLowerCase(),
+      });
 
       console.log("Doctor account created successfully:", signupResponse.data);
 
@@ -480,21 +477,18 @@ export default function AddStaffPage() {
         gender: nurseSignupData.gender,
       });
 
-      const signupResponse = await axios.post(
-        "https://dpdlab1.slt.lk:8645/auth/api/auth/register",
-        {
-          first_name: firstName,
-          last_name: lastName,
-          email: nurseSignupData.email,
-          password: generatedPassword,
-          confirm_password: generatedPassword,
-          phone_number: nurseSignupData.phonenumber,
-          nic: nurseSignupData.nic,
-          role: "nurse",
-          age: parseInt(nurseSignupData.age),
-          gender: nurseSignupData.gender.toLowerCase(),
-        }
-      );
+      const signupResponse = await axios.post("/api/external-auth/register", {
+        first_name: firstName,
+        last_name: lastName,
+        email: nurseSignupData.email,
+        password: generatedPassword,
+        confirm_password: generatedPassword,
+        phone_number: nurseSignupData.phonenumber,
+        nic: nurseSignupData.nic,
+        role: "nurse",
+        age: parseInt(nurseSignupData.age),
+        gender: nurseSignupData.gender.toLowerCase(),
+      });
 
       console.log("Nurse account created successfully:", signupResponse.data);
 
