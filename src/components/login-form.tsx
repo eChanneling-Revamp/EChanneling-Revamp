@@ -49,9 +49,13 @@ export function LoginForm() {
         }
 
         // Store token and user data if provided
-        const token = response.data.token || response.data.accessToken || response.data.access_token;
-        const userData = response.data.user || response.data.data || response.data;
-        
+        const token =
+          response.data.token ||
+          response.data.accessToken ||
+          response.data.access_token;
+        const userData =
+          response.data.user || response.data.data || response.data;
+
         console.log("Extracted token:", token ? "Found" : "Not found");
         console.log("Extracted user data:", userData);
 
@@ -63,7 +67,7 @@ export function LoginForm() {
         } else {
           console.warn("⚠ No token found in response");
         }
-        
+
         if (userData && (userData.role || userData.email)) {
           localStorage.setItem("user", JSON.stringify(userData));
           // Set user cookie for middleware role checking
@@ -78,14 +82,16 @@ export function LoginForm() {
         // Navigate based on user role
         const userRole = userData?.role || response.data.role;
         const userEmail = userData?.email || email;
-        
+
         console.log("User data for navigation:", userData);
         console.log("Extracted role:", userRole);
         console.log("Extracted email:", userEmail);
         let dashboardPath = "/dashboard";
 
         if (!userRole) {
-          console.warn("⚠ No user role found, redirecting to generic dashboard");
+          console.warn(
+            "⚠ No user role found, redirecting to generic dashboard"
+          );
         }
 
         if (userRole) {
@@ -151,7 +157,7 @@ export function LoginForm() {
         console.log("Token stored:", !!localStorage.getItem("authToken"));
         console.log("User stored:", !!localStorage.getItem("user"));
         console.log("=========================");
-        
+
         router.push(dashboardPath);
       } else {
         // Send OTP to phone number via proxy
@@ -209,9 +215,13 @@ export function LoginForm() {
       }
 
       // Store token and user data if provided
-      const token = response.data.token || response.data.accessToken || response.data.access_token;
-      const userData = response.data.user || response.data.data || response.data;
-      
+      const token =
+        response.data.token ||
+        response.data.accessToken ||
+        response.data.access_token;
+      const userData =
+        response.data.user || response.data.data || response.data;
+
       console.log("Extracted token:", token ? "Found" : "Not found");
       console.log("Extracted user data:", userData);
 
@@ -223,7 +233,7 @@ export function LoginForm() {
       } else {
         console.warn("⚠ No token found in OTP response");
       }
-      
+
       if (userData && (userData.role || userData.email)) {
         localStorage.setItem("user", JSON.stringify(userData));
         // Set user cookie for middleware role checking
@@ -238,14 +248,16 @@ export function LoginForm() {
       // Navigate based on user role
       const userRole = userData?.role || response.data.role;
       const userEmail = userData?.email || response.data.email || phoneNumber;
-      
+
       console.log("User data for navigation:", userData);
       console.log("Extracted role:", userRole);
       console.log("Extracted email:", userEmail);
       let dashboardPath = "/dashboard";
 
       if (!userRole) {
-        console.warn("⚠ No user role found in OTP response, redirecting to generic dashboard");
+        console.warn(
+          "⚠ No user role found in OTP response, redirecting to generic dashboard"
+        );
       }
 
       if (userRole) {
@@ -311,7 +323,7 @@ export function LoginForm() {
       console.log("Token stored:", !!localStorage.getItem("authToken"));
       console.log("User stored:", !!localStorage.getItem("user"));
       console.log("==============================");
-      
+
       router.push(dashboardPath);
     } catch (error: any) {
       if (axios.isAxiosError(error)) {

@@ -22,7 +22,10 @@ export async function POST(request: NextRequest) {
       body
     );
 
-    console.log("Login API proxy - External API response status:", response.status);
+    console.log(
+      "Login API proxy - External API response status:",
+      response.status
+    );
     console.log("Login API proxy - External API response data:", response.data);
     console.log("Login API proxy - Response has token:", !!response.data.token);
     console.log("Login API proxy - Response has user:", !!response.data.user);
