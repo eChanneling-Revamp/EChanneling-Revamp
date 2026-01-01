@@ -31,7 +31,7 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log(email, password);
+      console.log("Attempting login with:", { email });
       if (loginMethod === "password") {
         // Use external API for password login via proxy
         const response = await axios.post("/api/external-auth/login", {
@@ -39,29 +39,57 @@ export function LoginForm() {
           password: password,
         });
 
-        console.log("Login successful!", response.data);
+        console.log("Full API Response:", response);
+        console.log("Response data:", response.data);
+        console.log("Response data keys:", Object.keys(response.data));
+
+        // Check if response has expected structure
+        if (!response.data) {
+          throw new Error("No data received from login API");
+        }
 
         // Store token and user data if provided
-        if (response.data.token) {
-          localStorage.setItem("authToken", response.data.token);
+        const token = response.data.token || response.data.accessToken || response.data.access_token;
+        const userData = response.data.user || response.data.data || response.data;
+        
+        console.log("Extracted token:", token ? "Found" : "Not found");
+        console.log("Extracted user data:", userData);
+
+        if (token) {
+          localStorage.setItem("authToken", token);
           // Set cookie for middleware
-          document.cookie = `authToken=${response.data.token}; path=/; max-age=86400; SameSite=Lax`;
+          document.cookie = `authToken=${token}; path=/; max-age=86400; SameSite=Lax`;
+          console.log("✓ Token stored in localStorage and cookie");
+        } else {
+          console.warn("⚠ No token found in response");
         }
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+        if (userData && (userData.role || userData.email)) {
+          localStorage.setItem("user", JSON.stringify(userData));
           // Set user cookie for middleware role checking
           document.cookie = `user=${encodeURIComponent(
-            JSON.stringify(response.data.user)
+            JSON.stringify(userData)
           )}; path=/; max-age=86400; SameSite=Lax`;
+          console.log("✓ User data stored in localStorage and cookie");
+        } else {
+          console.warn("⚠ No user data found in response");
         }
 
         // Navigate based on user role
-        const userRole = response.data.user?.role || response.data.role;
-        const userEmail = response.data.user?.email || email;
-        console.log("User role:", userRole);
+        const userRole = userData?.role || response.data.role;
+        const userEmail = userData?.email || email;
+        
+        console.log("User data for navigation:", userData);
+        console.log("Extracted role:", userRole);
+        console.log("Extracted email:", userEmail);
         let dashboardPath = "/dashboard";
 
+        if (!userRole) {
+          console.warn("⚠ No user role found, redirecting to generic dashboard");
+        }
+
         if (userRole) {
+          console.log("Processing role-based navigation for role:", userRole);
           switch (userRole.toLowerCase()) {
             case "admin":
             case "super_admin":
@@ -117,7 +145,13 @@ export function LoginForm() {
           }
         }
 
-        console.log("Navigating to:", dashboardPath);
+        console.log("=== Navigation Summary ===");
+        console.log("Role:", userRole);
+        console.log("Target path:", dashboardPath);
+        console.log("Token stored:", !!localStorage.getItem("authToken"));
+        console.log("User stored:", !!localStorage.getItem("user"));
+        console.log("=========================");
+        
         router.push(dashboardPath);
       } else {
         // Send OTP to phone number via proxy
@@ -128,16 +162,21 @@ export function LoginForm() {
         setStep("verify");
       }
     } catch (error: any) {
+      console.error("=== Login Error ===");
+      console.error("Error object:", error);
       if (axios.isAxiosError(error)) {
+        console.error("API Error Response:", error.response?.data);
+        console.error("API Error Status:", error.response?.status);
         setError(
           error.response?.data?.message ||
             error.response?.data?.error ||
             "Login failed"
         );
       } else {
+        console.error("Non-Axios error:", error.message);
         setError("An error occurred during login");
       }
-      console.error("Login error:", error);
+      console.error("==================");
     } finally {
       setIsLoading(false);
     }
@@ -160,29 +199,57 @@ export function LoginForm() {
         otp: otp,
       });
 
-      console.log("OTP Login successful:", response.data);
+      console.log("Full OTP API Response:", response);
+      console.log("OTP Response data:", response.data);
+      console.log("OTP Response data keys:", Object.keys(response.data));
+
+      // Check if response has expected structure
+      if (!response.data) {
+        throw new Error("No data received from OTP verification API");
+      }
 
       // Store token and user data if provided
-      if (response.data.token) {
-        localStorage.setItem("authToken", response.data.token);
+      const token = response.data.token || response.data.accessToken || response.data.access_token;
+      const userData = response.data.user || response.data.data || response.data;
+      
+      console.log("Extracted token:", token ? "Found" : "Not found");
+      console.log("Extracted user data:", userData);
+
+      if (token) {
+        localStorage.setItem("authToken", token);
         // Set cookie for middleware
-        document.cookie = `authToken=${response.data.token}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `authToken=${token}; path=/; max-age=86400; SameSite=Lax`;
+        console.log("✓ Token stored in localStorage and cookie");
+      } else {
+        console.warn("⚠ No token found in OTP response");
       }
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+      
+      if (userData && (userData.role || userData.email)) {
+        localStorage.setItem("user", JSON.stringify(userData));
         // Set user cookie for middleware role checking
         document.cookie = `user=${encodeURIComponent(
-          JSON.stringify(response.data.user)
+          JSON.stringify(userData)
         )}; path=/; max-age=86400; SameSite=Lax`;
+        console.log("✓ User data stored in localStorage and cookie");
+      } else {
+        console.warn("⚠ No user data found in OTP response");
       }
 
       // Navigate based on user role
-      const userRole = response.data.user?.role || response.data.role;
-      const userEmail = response.data.user?.email || response.data.email;
-      console.log("User role:", userRole);
+      const userRole = userData?.role || response.data.role;
+      const userEmail = userData?.email || response.data.email || phoneNumber;
+      
+      console.log("User data for navigation:", userData);
+      console.log("Extracted role:", userRole);
+      console.log("Extracted email:", userEmail);
       let dashboardPath = "/dashboard";
 
+      if (!userRole) {
+        console.warn("⚠ No user role found in OTP response, redirecting to generic dashboard");
+      }
+
       if (userRole) {
+        console.log("Processing role-based navigation for role:", userRole);
         switch (userRole.toLowerCase()) {
           case "admin":
           case "super_admin":
@@ -238,10 +305,17 @@ export function LoginForm() {
         }
       }
 
-      console.log("Navigating to:", dashboardPath);
+      console.log("=== OTP Navigation Summary ===");
+      console.log("Role:", userRole);
+      console.log("Target path:", dashboardPath);
+      console.log("Token stored:", !!localStorage.getItem("authToken"));
+      console.log("User stored:", !!localStorage.getItem("user"));
+      console.log("==============================");
+      
       router.push(dashboardPath);
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
+        console.error("OTP verification error details:", error.response?.data);
         setError(
           error.response?.data?.message ||
             error.response?.data?.error ||

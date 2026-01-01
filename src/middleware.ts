@@ -13,6 +13,26 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow doctor setup route for authenticated doctor users
+  if (path === "/doctor-setup") {
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    // Only doctor role users can access setup page
+    const userCookie = request.cookies.get("user")?.value;
+    if (userCookie) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(userCookie));
+        if (userData.role?.toLowerCase() === "doctor") {
+          return NextResponse.next();
+        }
+      } catch (error) {
+        console.error("Error parsing user cookie:", error);
+      }
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   // Allow hospital setup route for authenticated hospital users
   if (path === "/hospital/setup") {
     if (!token) {
@@ -22,7 +42,7 @@ export function middleware(request: NextRequest) {
     const userCookie = request.cookies.get("user")?.value;
     if (userCookie) {
       try {
-        const userData = JSON.parse(userCookie);
+        const userData = JSON.parse(decodeURIComponent(userCookie));
         if (userData.role?.toLowerCase() === "hospital") {
           return NextResponse.next();
         }
@@ -44,7 +64,7 @@ export function middleware(request: NextRequest) {
 
   if (userCookie) {
     try {
-      const userData = JSON.parse(userCookie);
+      const userData = JSON.parse(decodeURIComponent(userCookie));
       userRole = userData.role?.toLowerCase();
     } catch (error) {
       console.error("Error parsing user cookie:", error);
@@ -88,6 +108,7 @@ export const config = {
     "/dashboard/:path*",
     "/admin/:path*",
     "/doctor/:path*",
+    "/doctor-setup",
     "/user/:path*",
     "/hospital/:path*",
     "/staff/:path*",
