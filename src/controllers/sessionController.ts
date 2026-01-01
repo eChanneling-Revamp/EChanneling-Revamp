@@ -75,7 +75,7 @@ export async function getSessionById(id: string) {
 export async function cancelSession(id: string) {
   return prisma.session.update({
     where: { id },
-    data: { status: "cancelled" },
+    data: { status: "ENDED" },
   });
 }
 
