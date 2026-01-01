@@ -140,7 +140,7 @@ model Session {
   capacity      Int           @default(5)
   location      String
   hospitalId    String
-  status        SessionStatus @default(SCHEDULED)
+  status        sessionstatus @default(SCHEDULED)
   createdAt     DateTime      @default(now()) @db.Timestamp(6)
   scheduledAt   DateTime      @db.Timestamp(6)
   startTime     DateTime      @db.Timestamp(6)
@@ -790,7 +790,7 @@ enum PrescriptionStatus {
   COMPLETED
 }
 
-enum SessionStatus {
+enum sessionstatus {
   SCHEDULED
   PAUSED
   ONGOING
