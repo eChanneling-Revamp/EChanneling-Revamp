@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 // DELETE - Delete a cashier
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Get token from cookies
     const token = req.cookies.get("authToken")?.value;
@@ -92,10 +92,10 @@ export async function DELETE(
 // GET - Get a single cashier by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const cashier = await prisma.cashier.findUnique({
       where: { id },
@@ -124,10 +124,10 @@ export async function GET(
 // PUT - Update a cashier
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Get token from cookies
     const token = req.cookies.get("authToken")?.value;
