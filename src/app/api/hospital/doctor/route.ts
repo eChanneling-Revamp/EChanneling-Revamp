@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
           error:
             "Insufficient privileges. Only hospital and doctor users can add doctors.",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       if (!hospital || hospital.email !== userEmail) {
         return NextResponse.json(
           { error: "You can only add doctors to your own hospital" },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     if (existingDoctor) {
       return NextResponse.json(
         { error: "A doctor with this email already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
         message: "Doctor added successfully",
         data: doctor,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     console.error("Error creating doctor:", error);
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
     if (error.code === "P2002") {
       return NextResponse.json(
         { error: "A doctor with this email already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
         error: "Internal server error",
         details: error.message || "Failed to add doctor",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -230,7 +230,7 @@ export async function GET(req: NextRequest) {
       if (!doctor) {
         return NextResponse.json(
           { error: "Doctor not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -245,9 +245,21 @@ export async function GET(req: NextRequest) {
     const doctors = await prisma.doctor.findMany({
       where: hospitalId
         ? {
-            hospitalId: {
-              has: hospitalId, // Check if hospitalId exists in the hospitalId array
-            },
+            OR: [
+              {
+                hospitalId: {
+                  has: hospitalId, // Check if hospitalId exists in the hospitalId array
+                },
+              },
+              {
+                hospitals: {
+                  some: {
+                    hospitalId: hospitalId,
+                    isActive: true,
+                  },
+                },
+              },
+            ],
           }
         : {},
       select: {
@@ -303,7 +315,7 @@ export async function GET(req: NextRequest) {
     console.error("Error fetching doctors:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

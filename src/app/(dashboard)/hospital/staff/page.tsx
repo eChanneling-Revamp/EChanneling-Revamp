@@ -47,6 +47,18 @@ interface Nurse {
   updatedAt: string;
 }
 
+interface Cashier {
+  id: string;
+  name: string;
+  email: string;
+  phonenumber: string;
+  age?: number;
+  profileImage?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function HospitalStaffPage() {
   const router = useRouter();
   const { isAuthorized, isLoading: authLoading } = useRoleProtection({
@@ -56,9 +68,12 @@ export default function HospitalStaffPage() {
     useHospitalStatus();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [nurses, setNurses] = useState<Nurse[]>([]);
+  const [cashiers, setCashiers] = useState<Cashier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hospitalId, setHospitalId] = useState("");
-  const [activeTab, setActiveTab] = useState<"doctor" | "nurse">("doctor");
+  const [activeTab, setActiveTab] = useState<"doctor" | "nurse" | "cashier">(
+    "doctor",
+  );
 
   const [q, setQ] = useState("");
   const [specialty, setSpecialty] = useState("All");
@@ -91,6 +106,7 @@ export default function HospitalStaffPage() {
         setHospitalId(hospitalId);
         fetchDoctors(hospitalId);
         fetchNurses(hospitalId);
+        fetchCashiers(hospitalId);
       } else {
         toast.error("Hospital information not found");
         setIsLoading(false);
@@ -106,7 +122,7 @@ export default function HospitalStaffPage() {
     try {
       setIsLoading(true);
       const response = await axios.get(
-        `/api/hospital/doctor?hospitalId=${hospitalId}`
+        `/api/hospital/doctor?hospitalId=${hospitalId}`,
       );
       if (response.data && response.data.data) {
         setDoctors(response.data.data);
@@ -122,7 +138,7 @@ export default function HospitalStaffPage() {
   const fetchNurses = async (hospitalId: string) => {
     try {
       const response = await axios.get(
-        `/api/hospital/nurse?hospitalId=${hospitalId}`
+        `/api/hospital/nurse?hospitalId=${hospitalId}`,
       );
       if (response.data && response.data.data) {
         setNurses(response.data.data);
@@ -130,6 +146,20 @@ export default function HospitalStaffPage() {
     } catch (error) {
       console.error("Error fetching nurses:", error);
       toast.error("Failed to load nurses");
+    }
+  };
+
+  const fetchCashiers = async (hospitalId: string) => {
+    try {
+      const response = await axios.get(
+        `/api/hospital/cashier?hospitalId=${hospitalId}`,
+      );
+      if (response.data && response.data.data) {
+        setCashiers(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching cashiers:", error);
+      toast.error("Failed to load cashiers");
     }
   };
 
@@ -159,7 +189,7 @@ export default function HospitalStaffPage() {
       toast.error(
         error.response?.data?.error ||
           error.response?.data?.message ||
-          "Failed to delete doctor"
+          "Failed to delete doctor",
       );
     }
   };
@@ -181,7 +211,7 @@ export default function HospitalStaffPage() {
       toast.error(
         error.response?.data?.error ||
           error.response?.data?.message ||
-          "Failed to delete nurse"
+          "Failed to delete nurse",
       );
     }
   };
@@ -209,9 +239,31 @@ export default function HospitalStaffPage() {
     }
   };
 
+  const handleCashierDelete = async (cashierId: string) => {
+    if (!window.confirm("Are you sure you want to delete this cashier?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/hospital/cashier/${cashierId}`);
+      toast.success("Cashier deleted successfully");
+      // Refresh the cashiers list
+      if (hospitalId) {
+        fetchCashiers(hospitalId);
+      }
+    } catch (error: any) {
+      console.error("Error deleting cashier:", error);
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Failed to delete cashier",
+      );
+    }
+  };
+
   const specialties = useMemo(() => {
     const uniqueSpecialties = Array.from(
-      new Set(doctors.map((d) => d.specialization))
+      new Set(doctors.map((d) => d.specialization)),
     );
     return ["All Specializations", ...uniqueSpecialties];
   }, [doctors]);
@@ -245,6 +297,18 @@ export default function HospitalStaffPage() {
       filterStatus === "All Status" ||
       (filterStatus === "Active" && n.isActive) ||
       (filterStatus === "Inactive" && !n.isActive);
+    return matchesQ && matchesStatus;
+  });
+
+  const filteredCashiers = cashiers.filter((c) => {
+    const matchesQ =
+      q === "" ||
+      `${c.name} ${c.email}`.toLowerCase().includes(q.toLowerCase());
+    const matchesStatus =
+      filterStatus === "All" ||
+      filterStatus === "All Status" ||
+      (filterStatus === "Active" && c.isActive) ||
+      (filterStatus === "Inactive" && !c.isActive);
     return matchesQ && matchesStatus;
   });
 
@@ -307,6 +371,21 @@ export default function HospitalStaffPage() {
           >
             Nurses
           </button>
+          <button
+            onClick={() => {
+              setActiveTab("cashier");
+              setQ("");
+              setSpecialty("All");
+              setFilterStatus("All");
+            }}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-all ${
+              activeTab === "cashier"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Cashiers
+          </button>
         </div>
 
         <div className="flex justify-between gap-3 mb-6">
@@ -349,23 +428,36 @@ export default function HospitalStaffPage() {
             onClick={() => router.push("/hospital/staff/add")}
             className="bg-[#013e7f] text-white px-4 py-2 rounded font-medium hover:bg-[#012d5f] transition-colors"
           >
-            + Add {activeTab === "doctor" ? "Doctor" : "Nurse"}
+            + Add{" "}
+            {activeTab === "doctor"
+              ? "Doctor"
+              : activeTab === "nurse"
+                ? "Nurse"
+                : "Cashier"}
           </button>
         </div>
 
         <div className="bg-white rounded shadow p-6">
           <div className="w-full flex justify-between items-center py-2 mb-4">
             <h3 className="text-xl font-semibold text-gray-900">
-              {activeTab === "doctor" ? "Our Doctors" : "Our Nurses"}
+              {activeTab === "doctor"
+                ? "Our Doctors"
+                : activeTab === "nurse"
+                  ? "Our Nurses"
+                  : "Our Cashiers"}
             </h3>
             <span className="text-sm text-gray-600">
               {activeTab === "doctor"
                 ? `${filtered.length} doctor${
                     filtered.length !== 1 ? "s" : ""
                   } found`
-                : `${filteredNurses.length} nurse${
-                    filteredNurses.length !== 1 ? "s" : ""
-                  } found`}
+                : activeTab === "nurse"
+                  ? `${filteredNurses.length} nurse${
+                      filteredNurses.length !== 1 ? "s" : ""
+                    } found`
+                  : `${filteredCashiers.length} cashier${
+                      filteredCashiers.length !== 1 ? "s" : ""
+                    } found`}
             </span>
           </div>
           <hr className="border-gray-200 mb-6" />
@@ -450,6 +542,84 @@ export default function HospitalStaffPage() {
                     {nurses.length === 0
                       ? "No nurses added yet. Click 'Add Nurse' to get started."
                       : "No nurses match your search criteria."}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Cashiers View */}
+          {activeTab === "cashier" && (
+            <>
+              {filteredCashiers.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {filteredCashiers.map((c) => (
+                    <div
+                      key={c.id}
+                      className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                          {c.profileImage ? (
+                            <img
+                              src={c.profileImage}
+                              alt={c.name}
+                              className="w-16 h-16 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl font-bold text-blue-600">
+                              {c.name.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">
+                            {c.name}
+                          </h4>
+                          <p className="text-sm text-gray-600">{c.email}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Phone:</span>
+                          <span className="text-gray-900">{c.phonenumber}</span>
+                        </div>
+                        {c.age && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Age:</span>
+                            <span className="text-gray-900">{c.age}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Status:</span>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              c.isActive
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {c.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleCashierDelete(c.id)}
+                          className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">
+                    {cashiers.length === 0
+                      ? "No cashiers added yet. Click 'Add Cashier' to get started."
+                      : "No cashiers match your search criteria."}
                   </p>
                 </div>
               )}

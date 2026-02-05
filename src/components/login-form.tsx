@@ -13,8 +13,9 @@ import axios from "axios";
 
 export function LoginForm() {
   const router = useRouter();
+  const [loginType, setLoginType] = useState<"normal" | "cashier">("normal");
   const [loginMethod, setLoginMethod] = useState<"password" | "otp">(
-    "password"
+    "password",
   );
   const [step, setStep] = useState<"login" | "verify">("login");
   const [email, setEmail] = useState("");
@@ -31,13 +32,28 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log("Attempting login with:", { email });
+      console.log("Attempting login with:", { email, loginType });
       if (loginMethod === "password") {
-        // Use external API for password login via proxy
-        const response = await axios.post("/api/external-auth/login", {
-          email: email, // API expects email field
-          password: password,
-        });
+        let response;
+
+        // Use different authentication based on loginType
+        if (loginType === "cashier") {
+          // Cashier login - use local authentication
+          console.log("Attempting cashier login...");
+          response = await axios.post("/api/auth/cashier-login", {
+            email: email,
+            password: password,
+          });
+          console.log("Cashier login successful");
+        } else {
+          // Normal login - use external auth API
+          console.log("Attempting external auth login...");
+          response = await axios.post("/api/external-auth/login", {
+            email: email,
+            password: password,
+          });
+          console.log("External auth successful");
+        }
 
         console.log("Full API Response:", response);
         console.log("Response data:", response.data);
@@ -72,7 +88,7 @@ export function LoginForm() {
           localStorage.setItem("user", JSON.stringify(userData));
           // Set user cookie for middleware role checking
           document.cookie = `user=${encodeURIComponent(
-            JSON.stringify(userData)
+            JSON.stringify(userData),
           )}; path=/; max-age=86400; SameSite=Lax`;
           console.log("✓ User data stored in localStorage and cookie");
         } else {
@@ -90,7 +106,7 @@ export function LoginForm() {
 
         if (!userRole) {
           console.warn(
-            "⚠ No user role found, redirecting to generic dashboard"
+            "⚠ No user role found, redirecting to generic dashboard",
           );
         }
 
@@ -105,7 +121,7 @@ export function LoginForm() {
               // Check if doctor profile exists in database
               try {
                 const doctorCheckResponse = await axios.get(
-                  `/api/hospital/doctor?email=${userEmail}`
+                  `/api/hospital/doctor?email=${userEmail}`,
                 );
                 if (doctorCheckResponse.data.data) {
                   // Doctor profile exists, go to dashboard
@@ -128,7 +144,7 @@ export function LoginForm() {
               // Check if hospital data exists
               try {
                 const checkResponse = await axios.get(
-                  `/api/hospital/check?email=${userEmail}`
+                  `/api/hospital/check?email=${userEmail}`,
                 );
                 if (checkResponse.data.exists) {
                   dashboardPath = "/hospital/dashboard";
@@ -144,6 +160,9 @@ export function LoginForm() {
             case "patient":
             case "user":
               dashboardPath = "/user/dashboard";
+              break;
+            case "cashier":
+              dashboardPath = "/cashier";
               break;
             default:
               dashboardPath = "/dashboard";
@@ -176,7 +195,7 @@ export function LoginForm() {
         setError(
           error.response?.data?.message ||
             error.response?.data?.error ||
-            "Login failed"
+            "Login failed",
         );
       } else {
         console.error("Non-Axios error:", error.message);
@@ -238,7 +257,7 @@ export function LoginForm() {
         localStorage.setItem("user", JSON.stringify(userData));
         // Set user cookie for middleware role checking
         document.cookie = `user=${encodeURIComponent(
-          JSON.stringify(userData)
+          JSON.stringify(userData),
         )}; path=/; max-age=86400; SameSite=Lax`;
         console.log("✓ User data stored in localStorage and cookie");
       } else {
@@ -256,7 +275,7 @@ export function LoginForm() {
 
       if (!userRole) {
         console.warn(
-          "⚠ No user role found in OTP response, redirecting to generic dashboard"
+          "⚠ No user role found in OTP response, redirecting to generic dashboard",
         );
       }
 
@@ -271,7 +290,7 @@ export function LoginForm() {
             // Check if doctor profile exists in database
             try {
               const doctorCheckResponse = await axios.get(
-                `/api/hospital/doctor?email=${userEmail}`
+                `/api/hospital/doctor?email=${userEmail}`,
               );
               if (doctorCheckResponse.data.data) {
                 // Doctor profile exists, go to dashboard
@@ -294,7 +313,7 @@ export function LoginForm() {
             // Check if hospital data exists
             try {
               const checkResponse = await axios.get(
-                `/api/hospital/check?email=${userEmail}`
+                `/api/hospital/check?email=${userEmail}`,
               );
               if (checkResponse.data.exists) {
                 dashboardPath = "/hospital/dashboard";
@@ -331,7 +350,7 @@ export function LoginForm() {
         setError(
           error.response?.data?.message ||
             error.response?.data?.error ||
-            "OTP verification failed"
+            "OTP verification failed",
         );
       } else {
         setError("An error occurred during verification");
@@ -357,7 +376,7 @@ export function LoginForm() {
         setError(
           error.response?.data?.message ||
             error.response?.data?.error ||
-            "Failed to resend OTP"
+            "Failed to resend OTP",
         );
       } else {
         setError("An error occurred while resending OTP");
@@ -402,34 +421,78 @@ export function LoginForm() {
 
         {step === "login" ? (
           <>
-            {/* Login Method Toggle */}
-            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+            {/* Login Type Selection (Normal/Cashier) */}
+            <div className="flex gap-3 p-1.5 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl border border-blue-100">
               <button
                 type="button"
-                onClick={() => setLoginMethod("password")}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-                  loginMethod === "password"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                onClick={() => setLoginType("normal")}
+                className={`flex-1 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  loginType === "normal"
+                    ? "bg-white text-blue-600 shadow-md border border-blue-200"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
                 }`}
               >
-                Password
+                <div className="flex flex-col items-center gap-1">
+                  <span>👤</span>
+                  <span>Normal Login</span>
+                </div>
               </button>
               <button
                 type="button"
-                onClick={() => setLoginMethod("otp")}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-                  loginMethod === "otp"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                onClick={() => setLoginType("cashier")}
+                className={`flex-1 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  loginType === "cashier"
+                    ? "bg-white text-green-600 shadow-md border border-green-200"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
                 }`}
               >
-                OTP
+                <div className="flex flex-col items-center gap-1">
+                  <span>💼</span>
+                  <span>Cashier Login</span>
+                </div>
               </button>
             </div>
 
+            {/* Login Method Toggle (Only for Normal Login) */}
+            {loginType === "normal" && (
+              <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod("password")}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                    loginMethod === "password"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod("otp")}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                    loginMethod === "otp"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  OTP
+                </button>
+              </div>
+            )}
+
+            {/* Info message for Cashier Login */}
+            {loginType === "cashier" && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700 text-center">
+                  <span className="font-medium">Cashier Login:</span> Use your
+                  hospital-provided email and password
+                </p>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              {loginMethod === "password" ? (
+              {loginType === "cashier" || loginMethod === "password" ? (
                 <>
                   {/* Email Field */}
                   <div className="space-y-2">
@@ -437,7 +500,7 @@ export function LoginForm() {
                       htmlFor="email-password"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Email
+                      {loginType === "cashier" ? "Cashier Email" : "Email"}
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -538,12 +601,12 @@ export function LoginForm() {
                 disabled={isLoading}
               >
                 {isLoading
-                  ? loginMethod === "password"
+                  ? loginType === "cashier" || loginMethod === "password"
                     ? "Signing in..."
                     : "Sending OTP..."
-                  : loginMethod === "password"
-                  ? "Sign In"
-                  : "Send OTP"}
+                  : loginType === "cashier" || loginMethod === "password"
+                    ? "Sign In"
+                    : "Send OTP"}
               </button>
             </form>
           </>

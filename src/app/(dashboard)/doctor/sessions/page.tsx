@@ -101,11 +101,24 @@ export default function SessionsPage() {
     setLoading(true);
     try {
       const res = await fetch(`/api/sessions?doctorId=${doctorId}`);
+
+      if (!res.ok) {
+        console.error(`API error: ${res.status}`);
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
       const data = await res.json();
+
       if (Array.isArray(data)) {
         setSessions(data);
+      } else if (data.message) {
+        // API returned an error message
+        console.error("API error:", data.message);
+        setSessions([]);
       } else {
-        console.error("API returned non-array data:", data);
+        console.error("API returned unexpected data format:", data);
         setSessions([]);
       }
     } catch (error) {
@@ -136,10 +149,10 @@ export default function SessionsPage() {
             } else {
               console.error(
                 "Doctor not found:",
-                data.error || "No doctor data returned"
+                data.error || "No doctor data returned",
               );
               alert(
-                `Doctor not found for email: ${email}. Please contact administrator.`
+                `Doctor not found for email: ${email}. Please contact administrator.`,
               );
               setLoading(false);
             }
@@ -201,7 +214,7 @@ export default function SessionsPage() {
       const nursePromises = doctorHospitalId.map((hospitalId) =>
         fetch(`/api/hospital/nurse?hospitalId=${hospitalId}`)
           .then((res) => res.json())
-          .then((data) => data.data || [])
+          .then((data) => data.data || []),
       );
 
       const nursesArrays = await Promise.all(nursePromises);
@@ -209,7 +222,7 @@ export default function SessionsPage() {
       const allNurses = nursesArrays.flat();
       const uniqueNurses = allNurses.filter(
         (nurse, index, self) =>
-          index === self.findIndex((n) => n.id === nurse.id)
+          index === self.findIndex((n) => n.id === nurse.id),
       );
 
       setNurses(uniqueNurses);
@@ -222,7 +235,7 @@ export default function SessionsPage() {
   const handleDeleteSession = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this session? This action cannot be undone."
+        "Are you sure you want to delete this session? This action cannot be undone.",
       )
     )
       return;
@@ -239,7 +252,7 @@ export default function SessionsPage() {
       } else {
         const errorData = await res.json();
         alert(
-          `Failed to delete session: ${errorData.message || "Unknown error"}`
+          `Failed to delete session: ${errorData.message || "Unknown error"}`,
         );
       }
     } catch (error) {
@@ -291,7 +304,7 @@ export default function SessionsPage() {
       } else {
         const errorData = await res.json();
         alert(
-          `Error updating session: ${errorData.message || "Unknown error"}`
+          `Error updating session: ${errorData.message || "Unknown error"}`,
         );
       }
     } catch (error) {
@@ -524,7 +537,7 @@ export default function SessionsPage() {
                         : "Time not set";
 
                     const hospital = hospitals.find(
-                      (h) => h.id === session.hospitalId
+                      (h) => h.id === session.hospitalId,
                     );
 
                     return (
@@ -710,7 +723,7 @@ export default function SessionsPage() {
                       : "Date not set";
 
                     const hospital = hospitals.find(
-                      (h) => h.id === session.hospitalId
+                      (h) => h.id === session.hospitalId,
                     );
 
                     return (
@@ -918,7 +931,7 @@ export default function SessionsPage() {
                         value={form.nurseId}
                         onChange={(e) => {
                           const selectedNurse = nurses.find(
-                            (n) => n.id === e.target.value
+                            (n) => n.id === e.target.value,
                           );
                           if (selectedNurse) {
                             setForm({
@@ -941,7 +954,7 @@ export default function SessionsPage() {
                           .filter(
                             (nurse: any) =>
                               !form.hospitalId ||
-                              nurse.hospitalId === form.hospitalId
+                              nurse.hospitalId === form.hospitalId,
                           )
                           .map((nurse) => (
                             <option key={nurse.id} value={nurse.id}>
@@ -1111,7 +1124,7 @@ export default function SessionsPage() {
                     </p>
                     <p className="text-base text-gray-900 mt-1">
                       {hospitals.find(
-                        (h) => h.id === selectedSession.hospitalId
+                        (h) => h.id === selectedSession.hospitalId,
                       )?.name || "N/A"}
                     </p>
                   </div>
@@ -1132,7 +1145,7 @@ export default function SessionsPage() {
                             {
                               dateStyle: "medium",
                               timeStyle: "short",
-                            }
+                            },
                           )
                         : "Not set"}
                     </p>
@@ -1148,7 +1161,7 @@ export default function SessionsPage() {
                             {
                               dateStyle: "medium",
                               timeStyle: "short",
-                            }
+                            },
                           )
                         : "Not set"}
                     </p>

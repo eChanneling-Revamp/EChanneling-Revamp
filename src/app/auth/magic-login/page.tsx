@@ -9,7 +9,7 @@ function MagicLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading"
+    "loading",
   );
   const [message, setMessage] = useState("");
 
@@ -46,7 +46,7 @@ function MagicLoginContent() {
         if (response.data.hospitalInfo) {
           localStorage.setItem(
             "hospitalInfo",
-            JSON.stringify(response.data.hospitalInfo)
+            JSON.stringify(response.data.hospitalInfo),
           );
         }
 
@@ -58,7 +58,7 @@ function MagicLoginContent() {
               name: response.data.user.name,
               phoneNumber: response.data.user.phoneNumber,
               createdByHospital: response.data.user.createdByHospital || false,
-            })
+            }),
           );
         }
 
@@ -71,6 +71,8 @@ function MagicLoginContent() {
             router.push("/doctor-setup");
           } else if (userRole === "nurse") {
             router.push("/nurse-setup");
+          } else if (userRole === "cashier") {
+            router.push("/cashier");
           } else {
             router.push("/dashboard");
           }
@@ -83,7 +85,7 @@ function MagicLoginContent() {
       console.error("Magic login error:", error);
       setStatus("error");
       setMessage(
-        error.response?.data?.error || "An error occurred during login"
+        error.response?.data?.error || "An error occurred during login",
       );
     }
   };

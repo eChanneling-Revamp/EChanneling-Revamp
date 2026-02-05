@@ -18,11 +18,11 @@ export async function POST(req: Request) {
     if (!to || !name || !email || !password || !role) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Generate magic link token for doctor/nurse setup
+    // Generate magic link token for doctor/nurse/cashier setup
     const magicToken = generateMagicLinkToken({
       email,
       name,
@@ -30,8 +30,13 @@ export async function POST(req: Request) {
       role,
       hospitalId: hospitalId || "",
       hospitalName: hospitalName || "",
-      type: role === "doctor" ? "doctor-setup" : "nurse-setup",
-      createdByHospital: true, // Hospital is creating this doctor
+      type:
+        role === "doctor"
+          ? "doctor-setup"
+          : role === "nurse"
+            ? "nurse-setup"
+            : "cashier-dashboard",
+      createdByHospital: true, // Hospital is creating this user
     });
 
     const magicLink = `${
@@ -87,14 +92,14 @@ export async function POST(req: Request) {
             <div style="margin: 30px 0; text-align: center;">
               <a href="${magicLink}" 
                  style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600;">
-                Activate Account & Complete Setup
+                ${role === "cashier" ? "Login to Dashboard" : "Activate Account & Complete Setup"}
               </a>
             </div>
             
             <div style="background-color: #f0f9ff; border-left: 4px solid #0284c7; padding: 15px; margin: 20px 0; border-radius: 4px;">
               <p style="margin: 0; color: #0c4a6e; font-size: 14px;">
-                <strong>📋 One-Click Setup:</strong><br>
-                Click the button above to automatically log in and complete your profile setup. This secure link will expire in 7 days.
+                <strong>${role === "cashier" ? "🔐 One-Click Login" : "📋 One-Click Setup"}:</strong><br>
+                Click the button above to automatically log in ${role === "cashier" ? "to your dashboard" : "and complete your profile setup"}. This secure link will expire in 7 days.
               </p>
             </div>
             
@@ -102,7 +107,7 @@ export async function POST(req: Request) {
               <h3 style="color: #1f2937; font-size: 16px; margin-bottom: 10px;">Getting Started</h3>
               <ul style="color: #4b5563; line-height: 1.8; margin: 0; padding-left: 20px;">
                 <li>Log in using the credentials above</li>
-                <li>Complete your profile information</li>
+                ${role === "cashier" ? "" : "<li>Complete your profile information</li>"}
                 <li>Change your password in account settings</li>
                 ${
                   role === "doctor"
@@ -112,6 +117,11 @@ export async function POST(req: Request) {
                 ${
                   role === "nurse"
                     ? "<li>Review your assigned sessions and duties</li>"
+                    : ""
+                }
+                ${
+                  role === "cashier"
+                    ? "<li>Start managing appointments and patient check-ins</li>"
                     : ""
                 }
               </ul>
@@ -173,19 +183,19 @@ The eChanneling Team
           message: "Credentials sent successfully",
           messageId: result.messageId,
         },
-        { status: 200 }
+        { status: 200 },
       );
     } else {
       return NextResponse.json(
         { error: "Failed to send email", details: result.error },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error: any) {
     console.error("Error sending credentials email:", error);
     return NextResponse.json(
       { error: "Internal server error", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

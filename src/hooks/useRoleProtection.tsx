@@ -10,7 +10,8 @@ type UserRole =
   | "hospital"
   | "nurse"
   | "patient"
-  | "user";
+  | "user"
+  | "cashier";
 
 interface UseRoleProtectionOptions {
   allowedRoles: UserRole[];
@@ -41,7 +42,7 @@ export function useRoleProtection({
 
       // Check if user's role is in the allowed roles
       const hasAccess = allowedRoles.some(
-        (role) => role.toLowerCase() === userRole
+        (role) => role.toLowerCase() === userRole,
       );
 
       if (hasAccess) {

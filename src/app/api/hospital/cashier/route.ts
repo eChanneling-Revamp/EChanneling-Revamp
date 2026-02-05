@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,7 +30,8 @@ export async function POST(req: NextRequest) {
     if (userRole !== "hospital") {
       return NextResponse.json(
         {
-          error: "Insufficient privileges. Only hospital users can add nurses.",
+          error:
+            "Insufficient privileges. Only hospital users can add cashiers.",
         },
         { status: 403 },
       );
@@ -40,21 +42,16 @@ export async function POST(req: NextRequest) {
       name,
       email,
       phonenumber,
-      experience,
+      password,
       age,
       profileImage,
-      availableDays,
       hospitalId,
+      gender,
+      nic,
     } = body;
 
     // Validate required fields
-    if (
-      !name ||
-      !email ||
-      !phonenumber ||
-      experience === undefined ||
-      !hospitalId
-    ) {
+    if (!name || !email || !phonenumber || !password || !hospitalId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 },
@@ -69,48 +66,52 @@ export async function POST(req: NextRequest) {
 
     if (!hospital || hospital.email !== userEmail) {
       return NextResponse.json(
-        { error: "You can only add nurses to your own hospital" },
+        { error: "You can only add cashiers to your own hospital" },
         { status: 403 },
       );
     }
 
-    // Check if nurse with this email already exists
-    const existingNurse = await prisma.nurse_Detail.findUnique({
+    // Check if cashier with this email already exists
+    const existingCashier = await prisma.cashier.findUnique({
       where: { email },
     });
 
-    if (existingNurse) {
+    if (existingCashier) {
       return NextResponse.json(
-        { error: "A nurse with this email already exists" },
+        { error: "A cashier with this email already exists" },
         { status: 409 },
       );
     }
 
-    // Create new nurse
-    const nurse = await prisma.nurse_Detail.create({
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new cashier
+    const cashier = await prisma.cashier.create({
       data: {
         name,
         email,
+        password: hashedPassword,
         phonenumber,
-        experience: parseInt(experience),
         age: age ? parseInt(age) : null,
         profileImage: profileImage || null,
-        availableDays: availableDays || [],
         hospitalId,
         isActive: true,
+        gender: gender || null,
+        nic: nic || null,
       },
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Nurse added successfully",
-        data: nurse,
+        message: "Cashier added successfully",
+        data: cashier,
       },
       { status: 201 },
     );
   } catch (error: any) {
-    console.error("Error creating nurse:", error);
+    console.error("Error creating cashier:", error);
     console.error("Error details:", {
       message: error.message,
       code: error.code,
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     if (error.code === "P2002") {
       return NextResponse.json(
-        { error: "A nurse with this email already exists" },
+        { error: "A cashier with this email already exists" },
         { status: 409 },
       );
     }
@@ -127,14 +128,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: error.message || "Failed to add nurse",
+        details: error.message || "Failed to add cashier",
       },
       { status: 500 },
     );
   }
 }
 
-// GET - Get all nurses for a hospital
+// GET - Get all cashiers for a hospital
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -145,18 +146,17 @@ export async function GET(req: NextRequest) {
       where.hospitalId = hospitalId;
     }
 
-    const nurses = await prisma.nurse_Detail.findMany({
+    const cashiers = await prisma.cashier.findMany({
       where,
       select: {
         id: true,
         name: true,
         email: true,
         phonenumber: true,
-        experience: true,
+        age: true,
         profileImage: true,
-        availableDays: true,
-        hospitalId: true,
         isActive: true,
+        hospitalId: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -165,15 +165,18 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      message: "Nurses retrieved successfully",
-      data: nurses,
-      count: nurses.length,
-    });
-  } catch (error: any) {
-    console.error("Error fetching nurses:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        message: "Cashiers retrieved successfully",
+        data: cashiers,
+        count: cashiers.length,
+      },
+      { status: 200 },
+    );
+  } catch (error: any) {
+    console.error("Error fetching cashiers:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch cashiers" },
       { status: 500 },
     );
   }

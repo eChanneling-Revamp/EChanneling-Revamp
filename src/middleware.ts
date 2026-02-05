@@ -80,13 +80,14 @@ export function middleware(request: NextRequest) {
     nurse: ["/user"],
     patient: ["/user"],
     user: ["/user"],
+    cashier: ["/cashier"],
   };
 
   // Check if user has access to the requested path
   if (userRole && roleRoutes[userRole]) {
     const allowedPaths = roleRoutes[userRole];
     const hasAccess = allowedPaths.some((allowedPath) =>
-      path.startsWith(allowedPath)
+      path.startsWith(allowedPath),
     );
 
     if (

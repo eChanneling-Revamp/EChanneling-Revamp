@@ -65,6 +65,7 @@ export async function GET(req: Request) {
       startTime: session.startTime,
       endTime: session.endTime,
       scheduledAt: session.scheduledAt,
+      appointments: session.appointments || [],
     }));
 
     return NextResponse.json(transformedSessions);
@@ -81,7 +82,7 @@ export async function PUT(req: Request) {
     if (!id)
       return NextResponse.json(
         { message: "Session ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     if (action === "cancel") {
       const updated = await cancelSession(id);
@@ -100,18 +101,18 @@ export async function DELETE(req: Request) {
     if (!id)
       return NextResponse.json(
         { message: "Session ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     const deleted = await deleteSession(id);
     if (!deleted) {
       return NextResponse.json(
         { message: "Session not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
     return NextResponse.json(
       { message: "Session deleted successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err: any) {
     return NextResponse.json({ message: err.message }, { status: 500 });

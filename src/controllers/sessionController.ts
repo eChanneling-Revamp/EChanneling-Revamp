@@ -30,7 +30,7 @@ export async function createSession(data: any) {
  */
 export async function getAllSessions(
   doctorId?: string | null,
-  hospitalId?: string | null
+  hospitalId?: string | null,
 ) {
   const where: any = {};
 
@@ -48,6 +48,13 @@ export async function getAllSessions(
       doctors: true,
       nurse_details: true,
       hospitals: true,
+      appointments: {
+        where: {
+          status: {
+            notIn: ["CANCELLED"],
+          },
+        },
+      },
     },
     orderBy: {
       startTime: "asc",

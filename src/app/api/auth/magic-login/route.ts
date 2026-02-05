@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Token is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     if (!payload) {
       return NextResponse.json(
         { success: false, error: "Invalid or expired token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -36,6 +36,8 @@ export async function POST(req: Request) {
         phoneNumber: payload.phoneNumber,
         role: payload.role,
         createdByHospital: payload.createdByHospital || false,
+        hospitalId: payload.hospitalId || null,
+        hospitalName: payload.hospitalName || null,
       };
 
       const hospitalInfo = payload.hospitalId
@@ -78,14 +80,14 @@ export async function POST(req: Request) {
           success: false,
           error: "Failed to verify user account",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error: any) {
     console.error("Magic login error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

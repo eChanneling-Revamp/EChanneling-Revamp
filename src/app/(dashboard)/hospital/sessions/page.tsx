@@ -125,7 +125,7 @@ export default function SessionsPage() {
 
       // Fetch hospital ID
       const hospitalResponse = await fetch(
-        `/api/hospital/check?email=${userData.email}`
+        `/api/hospital/check?email=${userData.email}`,
       );
       const hospitalData = await hospitalResponse.json();
 
@@ -139,13 +139,25 @@ export default function SessionsPage() {
 
       // Fetch sessions filtered by hospital ID via API
       const res = await fetch(`/api/sessions?hospitalId=${currentHospitalId}`);
+
+      if (!res.ok) {
+        console.error(`API error: ${res.status}`);
+        setSessions([]);
+        setLoading(false);
+        return;
+      }
+
       const data = await res.json();
 
       // Ensure data is always an array
       if (Array.isArray(data)) {
         setSessions(data);
+      } else if (data.message) {
+        // API returned an error message
+        console.error("API error:", data.message);
+        setSessions([]);
       } else {
-        console.error("API returned non-array data:", data);
+        console.error("API returned unexpected data format:", data);
         setSessions([]);
       }
     } catch (error) {
@@ -173,7 +185,7 @@ export default function SessionsPage() {
 
       // Fetch hospital ID
       const hospitalResponse = await fetch(
-        `/api/hospital/check?email=${userData.email}`
+        `/api/hospital/check?email=${userData.email}`,
       );
       const hospitalData = await hospitalResponse.json();
 
@@ -183,7 +195,7 @@ export default function SessionsPage() {
 
         // Fetch doctors for this hospital
         const doctorsResponse = await fetch(
-          `/api/hospital/doctor?hospitalId=${hospitalId}`
+          `/api/hospital/doctor?hospitalId=${hospitalId}`,
         );
         const doctorsData = await doctorsResponse.json();
 
@@ -207,7 +219,7 @@ export default function SessionsPage() {
 
       // Fetch hospital ID
       const hospitalResponse = await fetch(
-        `/api/hospital/check?email=${userData.email}`
+        `/api/hospital/check?email=${userData.email}`,
       );
       const hospitalData = await hospitalResponse.json();
 
@@ -216,7 +228,7 @@ export default function SessionsPage() {
 
         // Fetch nurses for this hospital
         const nursesResponse = await fetch(
-          `/api/hospital/nurse?hospitalId=${hospitalId}`
+          `/api/hospital/nurse?hospitalId=${hospitalId}`,
         );
         const nursesData = await nursesResponse.json();
 
@@ -233,7 +245,7 @@ export default function SessionsPage() {
   const handleDeleteSession = async (id: string) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this session? This action cannot be undone."
+        "Are you sure you want to delete this session? This action cannot be undone.",
       )
     )
       return;
@@ -250,7 +262,7 @@ export default function SessionsPage() {
       } else {
         const errorData = await res.json();
         toast.error(
-          `Failed to delete session: ${errorData.message || "Unknown error"}`
+          `Failed to delete session: ${errorData.message || "Unknown error"}`,
         );
       }
     } catch (error) {
@@ -303,7 +315,7 @@ export default function SessionsPage() {
       } else {
         const errorData = await res.json();
         toast.error(
-          `Error updating session: ${errorData.message || "Unknown error"}`
+          `Error updating session: ${errorData.message || "Unknown error"}`,
         );
       }
     } catch (error) {
@@ -363,7 +375,7 @@ export default function SessionsPage() {
     } else {
       const errorData = await res.json();
       toast.error(
-        `Error creating session: ${errorData.message || "Unknown error"}`
+        `Error creating session: ${errorData.message || "Unknown error"}`,
       );
     }
   };
@@ -619,7 +631,7 @@ export default function SessionsPage() {
                               >
                                 <option value="all">All Specializations</option>
                                 {Array.from(
-                                  new Set(doctors.map((d) => d.specialization))
+                                  new Set(doctors.map((d) => d.specialization)),
                                 ).map((spec) => (
                                   <option key={spec} value={spec}>
                                     {spec}
@@ -638,7 +650,7 @@ export default function SessionsPage() {
                                 value={form.doctorId}
                                 onChange={(e) => {
                                   const selectedDoctor = doctors.find(
-                                    (d) => d.id === e.target.value
+                                    (d) => d.id === e.target.value,
                                   );
                                   if (selectedDoctor) {
                                     setForm({
@@ -661,7 +673,7 @@ export default function SessionsPage() {
                                       ? doctors.filter(
                                           (d) =>
                                             d.specialization ===
-                                            selectedSpecialization
+                                            selectedSpecialization,
                                         )
                                       : doctors;
 
@@ -685,7 +697,7 @@ export default function SessionsPage() {
                                 value={form.nurseId}
                                 onChange={(e) => {
                                   const selectedNurse = nurses.find(
-                                    (n) => n.id === e.target.value
+                                    (n) => n.id === e.target.value,
                                   );
                                   if (selectedNurse) {
                                     setForm({
@@ -1273,7 +1285,7 @@ export default function SessionsPage() {
                             {
                               dateStyle: "medium",
                               timeStyle: "short",
-                            }
+                            },
                           )
                         : "Not set"}
                     </p>
@@ -1289,7 +1301,7 @@ export default function SessionsPage() {
                             {
                               dateStyle: "medium",
                               timeStyle: "short",
-                            }
+                            },
                           )
                         : "Not set"}
                     </p>

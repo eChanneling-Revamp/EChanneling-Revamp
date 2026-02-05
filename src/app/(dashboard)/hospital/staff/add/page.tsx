@@ -42,9 +42,11 @@ export default function AddStaffPage() {
     useHospitalStatus();
   const [hospitalId, setHospitalId] = useState("");
   const [hospitalName, setHospitalName] = useState("");
-  const [activeTab, setActiveTab] = useState<"doctor" | "nurse">("doctor");
+  const [activeTab, setActiveTab] = useState<"doctor" | "nurse" | "cashier">(
+    "doctor",
+  );
   const [doctorSubTab, setDoctorSubTab] = useState<"existing" | "manual">(
-    "existing"
+    "existing",
   );
   const [approvedDoctors, setApprovedDoctors] = useState<any[]>([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
@@ -76,17 +78,18 @@ export default function AddStaffPage() {
     email: "",
     phonenumber: "",
     experience: "",
+    age: "",
     profileImage: "",
     availableDays: [] as string[],
   });
-  const [nurseSignupData, setNurseSignupData] = useState({
+  const [cashierFormData, setCashierFormData] = useState({
     name: "",
     email: "",
     phonenumber: "",
     age: "",
     gender: "",
     nic: "",
-    role: "nurse",
+    profileImage: "",
   });
   const [submitLoading, setSubmitLoading] = useState(false);
 
@@ -139,13 +142,13 @@ export default function AddStaffPage() {
             `Doctor ${
               doctor.name
             }: approved=${isApproved}, hospitalId=${JSON.stringify(
-              doctorHospitalIds
-            )}, currentHospitalId=${hospitalId}, notAssigned=${notAssignedToThisHospital}`
+              doctorHospitalIds,
+            )}, currentHospitalId=${hospitalId}, notAssigned=${notAssignedToThisHospital}`,
           );
           return isApproved && notAssignedToThisHospital;
         });
         console.log(
-          `Total doctors: ${response.data.data.length}, Available: ${availableDoctors.length}`
+          `Total doctors: ${response.data.data.length}, Available: ${availableDoctors.length}`,
         );
         setApprovedDoctors(availableDoctors);
       }
@@ -157,31 +160,29 @@ export default function AddStaffPage() {
   const handleDoctorInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setDoctorFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleDoctorSignupInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = e.target;
     setDoctorSignupData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCashierInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCashierFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleNurseInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setNurseFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleNurseSignupInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-    setNurseSignupData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Generate random password
@@ -206,35 +207,35 @@ export default function AddStaffPage() {
 
     // Add 2 of each type for better strength
     passwordChars.push(
-      uppercase.charAt(Math.floor(Math.random() * uppercase.length))
+      uppercase.charAt(Math.floor(Math.random() * uppercase.length)),
     );
     passwordChars.push(
-      uppercase.charAt(Math.floor(Math.random() * uppercase.length))
+      uppercase.charAt(Math.floor(Math.random() * uppercase.length)),
     );
     passwordChars.push(
-      lowercase.charAt(Math.floor(Math.random() * lowercase.length))
+      lowercase.charAt(Math.floor(Math.random() * lowercase.length)),
     );
     passwordChars.push(
-      lowercase.charAt(Math.floor(Math.random() * lowercase.length))
+      lowercase.charAt(Math.floor(Math.random() * lowercase.length)),
     );
     passwordChars.push(
-      numbers.charAt(Math.floor(Math.random() * numbers.length))
+      numbers.charAt(Math.floor(Math.random() * numbers.length)),
     );
     passwordChars.push(
-      numbers.charAt(Math.floor(Math.random() * numbers.length))
+      numbers.charAt(Math.floor(Math.random() * numbers.length)),
     );
     passwordChars.push(
-      special.charAt(Math.floor(Math.random() * special.length))
+      special.charAt(Math.floor(Math.random() * special.length)),
     );
     passwordChars.push(
-      special.charAt(Math.floor(Math.random() * special.length))
+      special.charAt(Math.floor(Math.random() * special.length)),
     );
 
     // Fill the rest with random characters from all sets to reach 14 characters
     const allChars = uppercase + lowercase + numbers + special;
     while (passwordChars.length < 14) {
       passwordChars.push(
-        allChars.charAt(Math.floor(Math.random() * allChars.length))
+        allChars.charAt(Math.floor(Math.random() * allChars.length)),
       );
     }
 
@@ -257,7 +258,7 @@ export default function AddStaffPage() {
 
   const handleDoctorCheckboxChange = (
     name: "languages" | "availableDays",
-    value: string
+    value: string,
   ) => {
     setDoctorFormData((prev) => ({
       ...prev,
@@ -283,7 +284,7 @@ export default function AddStaffPage() {
     try {
       if (!hospitalId) {
         toast.error(
-          "Hospital information not found. Please complete your hospital setup first."
+          "Hospital information not found. Please complete your hospital setup first.",
         );
         setSubmitLoading(false);
         return;
@@ -347,7 +348,7 @@ export default function AddStaffPage() {
       });
 
       toast.success(
-        "Doctor account created successfully! Login credentials have been sent to their email."
+        "Doctor account created successfully! Login credentials have been sent to their email.",
       );
       setTimeout(() => {
         router.push("/hospital/staff");
@@ -387,7 +388,7 @@ export default function AddStaffPage() {
     try {
       if (!hospitalId) {
         toast.error(
-          "Hospital information not found. Please complete your hospital setup first."
+          "Hospital information not found. Please complete your hospital setup first.",
         );
         setSubmitLoading(false);
         return;
@@ -401,7 +402,7 @@ export default function AddStaffPage() {
 
       // Find the selected doctor's details
       const selectedDoctor = approvedDoctors.find(
-        (doc) => doc.id === selectedDoctorId
+        (doc) => doc.id === selectedDoctorId,
       );
 
       // Update the doctor's hospitalId
@@ -409,7 +410,7 @@ export default function AddStaffPage() {
         `/api/hospital/doctor/${selectedDoctorId}`,
         {
           hospitalId: hospitalId,
-        }
+        },
       );
 
       if (response.data) {
@@ -435,7 +436,7 @@ export default function AddStaffPage() {
         toast.error(
           err.response?.data?.error ||
             err.response?.data?.message ||
-            "Failed to add doctor"
+            "Failed to add doctor",
         );
       } else {
         toast.error("A network error occurred.");
@@ -452,68 +453,53 @@ export default function AddStaffPage() {
     try {
       if (!hospitalId) {
         toast.error(
-          "Hospital information not found. Please complete your hospital setup first."
+          "Hospital information not found. Please complete your hospital setup first.",
         );
         setSubmitLoading(false);
         return;
       }
 
-      // Generate random password
-      const generatedPassword = generatePassword();
-
-      // Split name into first and last name
-      const nameParts = nurseSignupData.name.trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || nameParts[0];
-
-      // Step 1: Create user account via external API
-      console.log("Attempting to create nurse account with:", {
-        first_name: firstName,
-        last_name: lastName,
-        email: nurseSignupData.email,
-        phone_number: nurseSignupData.phonenumber,
-        role: "nurse",
-        age: parseInt(nurseSignupData.age),
-        gender: nurseSignupData.gender,
-      });
-
-      const signupResponse = await axios.post("/api/external-auth/register", {
-        first_name: firstName,
-        last_name: lastName,
-        email: nurseSignupData.email,
-        password: generatedPassword,
-        confirm_password: generatedPassword,
-        phone_number: nurseSignupData.phonenumber,
-        nic: nurseSignupData.nic,
-        role: "nurse",
-        age: parseInt(nurseSignupData.age),
-        gender: nurseSignupData.gender.toLowerCase(),
-      });
-
-      console.log("Nurse account created successfully:", signupResponse.data);
-
-      if (!signupResponse.data) {
-        throw new Error("Failed to create user account");
+      // Validate required fields
+      if (
+        !nurseFormData.name ||
+        !nurseFormData.email ||
+        !nurseFormData.phonenumber ||
+        !nurseFormData.experience
+      ) {
+        toast.error("Please fill in all required fields");
+        setSubmitLoading(false);
+        return;
       }
 
-      // Step 2: Send welcome email with credentials and magic link
-      await axios.post("/api/email/send-credentials", {
-        to: nurseSignupData.email,
-        name: nurseSignupData.name,
-        email: nurseSignupData.email,
-        phonenumber: nurseSignupData.phonenumber,
-        password: generatedPassword,
-        role: "nurse",
-        hospitalId: hospitalId,
-        hospitalName: hospitalName,
-      });
+      if (nurseFormData.availableDays.length === 0) {
+        toast.error("Please select at least one available day");
+        setSubmitLoading(false);
+        return;
+      }
 
-      toast.success(
-        "Nurse account created successfully! Login credentials have been sent to their email."
-      );
-      setTimeout(() => {
-        router.push("/hospital/staff");
-      }, 2000);
+      // Create nurse record directly in nurse_details table
+      const nurseData = {
+        name: nurseFormData.name,
+        email: nurseFormData.email,
+        phonenumber: nurseFormData.phonenumber,
+        experience: parseInt(nurseFormData.experience),
+        age: nurseFormData.age ? parseInt(nurseFormData.age) : null,
+        profileImage: nurseFormData.profileImage || null,
+        availableDays: nurseFormData.availableDays,
+        hospitalId: hospitalId,
+        isActive: true,
+      };
+
+      console.log("Creating nurse with data:", nurseData);
+
+      const response = await axios.post("/api/hospital/nurse", nurseData);
+
+      if (response.data && response.data.success) {
+        toast.success("Nurse added successfully!");
+        setTimeout(() => {
+          router.push("/hospital/staff");
+        }, 1500);
+      }
     } catch (err: any) {
       console.error("Nurse creation error:", err);
       if (axios.isAxiosError(err)) {
@@ -531,6 +517,112 @@ export default function AddStaffPage() {
           errorMessage = err.response.data.error;
         } else if (err.response?.data?.detail) {
           errorMessage = err.response.data.detail;
+        }
+
+        toast.error(errorMessage);
+      } else {
+        toast.error("A network error occurred: " + err.message);
+      }
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleCashierSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitLoading(true);
+
+    try {
+      if (!hospitalId) {
+        toast.error(
+          "Hospital information not found. Please complete your hospital setup first.",
+        );
+        setSubmitLoading(false);
+        return;
+      }
+
+      // Validate required fields
+      if (
+        !cashierFormData.name ||
+        !cashierFormData.email ||
+        !cashierFormData.phonenumber ||
+        !cashierFormData.age ||
+        !cashierFormData.gender ||
+        !cashierFormData.nic
+      ) {
+        toast.error("Please fill in all required fields");
+        setSubmitLoading(false);
+        return;
+      }
+
+      // Generate random password
+      const generatedPassword = generatePassword();
+      console.log("Generated password:", generatedPassword);
+
+      // Create cashier record in database with hashed password
+      const cashierData = {
+        name: cashierFormData.name,
+        email: cashierFormData.email,
+        password: generatedPassword,
+        phonenumber: cashierFormData.phonenumber,
+        age: cashierFormData.age ? parseInt(cashierFormData.age) : null,
+        profileImage: cashierFormData.profileImage || null,
+        hospitalId: hospitalId,
+        isActive: true,
+        gender: cashierFormData.gender || null,
+        nic: cashierFormData.nic || null,
+      };
+
+      console.log("Creating cashier with data:", cashierData);
+
+      const response = await axios.post("/api/hospital/cashier", cashierData);
+
+      if (response.data && response.data.success) {
+        // Send welcome email with credentials
+        await axios.post("/api/email/send-credentials", {
+          to: cashierFormData.email,
+          name: cashierFormData.name,
+          email: cashierFormData.email,
+          phonenumber: cashierFormData.phonenumber,
+          password: generatedPassword,
+          role: "cashier",
+          hospitalId: hospitalId,
+          hospitalName: hospitalName,
+        });
+
+        toast.success(
+          "Cashier account created successfully! Login credentials have been sent to their email.",
+        );
+        setTimeout(() => {
+          router.push("/hospital/staff");
+        }, 2000);
+      }
+    } catch (err: any) {
+      console.error("Cashier creation error:", err);
+      console.error("Full error object:", JSON.stringify(err, null, 2));
+      if (axios.isAxiosError(err)) {
+        console.error("Error response:", err.response?.data);
+        console.error("Error status:", err.response?.status);
+        console.error("Error headers:", err.response?.headers);
+        let errorMessage = "Failed to add cashier";
+
+        if (err.response?.data?.message) {
+          // If message is an array, join the messages
+          if (Array.isArray(err.response.data.message)) {
+            errorMessage = err.response.data.message.join(", ");
+          } else {
+            errorMessage = err.response.data.message;
+          }
+        } else if (err.response?.data?.error) {
+          errorMessage = err.response.data.error;
+        } else if (err.response?.data?.detail) {
+          if (Array.isArray(err.response.data.detail)) {
+            errorMessage = err.response.data.detail
+              .map((d: any) => d.msg || d)
+              .join(", ");
+          } else {
+            errorMessage = err.response.data.detail;
+          }
         }
 
         toast.error(errorMessage);
@@ -611,6 +703,18 @@ export default function AddStaffPage() {
           >
             Nurse
           </button>
+          <button
+            onClick={() => {
+              setActiveTab("cashier");
+            }}
+            className={`px-6 py-3 rounded-md text-sm font-medium transition-all ${
+              activeTab === "cashier"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Cashier
+          </button>
         </div>
 
         {/* Doctor Form */}
@@ -684,7 +788,7 @@ export default function AddStaffPage() {
                               doctor.specialization
                                 .toLowerCase()
                                 .includes(searchQuery.toLowerCase())
-                            : true
+                            : true,
                         )
                         .map((doctor) => (
                           <label
@@ -766,7 +870,7 @@ export default function AddStaffPage() {
                             doctor.specialization
                               .toLowerCase()
                               .includes(searchQuery.toLowerCase())
-                          : true
+                          : true,
                       ).length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                           <p>No approved doctors available.</p>
@@ -1013,20 +1117,16 @@ export default function AddStaffPage() {
             className="bg-white rounded-xl shadow-sm p-8"
           >
             <div className="space-y-6">
-              {/* Signup Information Section */}
+              {/* Basic Information Section */}
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Account Information
+                  Nurse Information
                 </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  A random password will be generated and sent to the nurse's
-                  email address.
-                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Name */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="nurse-signup-name"
+                      htmlFor="nurse-name"
                       className="block text-sm font-semibold text-gray-700"
                     >
                       Full Name <span className="text-red-500">*</span>
@@ -1034,12 +1134,12 @@ export default function AddStaffPage() {
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        id="nurse-signup-name"
+                        id="nurse-name"
                         name="name"
                         type="text"
                         placeholder="Jane Doe"
-                        value={nurseSignupData.name}
-                        onChange={handleNurseSignupInputChange}
+                        value={nurseFormData.name}
+                        onChange={handleNurseInputChange}
                         className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                         required
                       />
@@ -1049,7 +1149,7 @@ export default function AddStaffPage() {
                   {/* Email */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="nurse-signup-email"
+                      htmlFor="nurse-email"
                       className="block text-sm font-semibold text-gray-700"
                     >
                       Email Address <span className="text-red-500">*</span>
@@ -1057,12 +1157,12 @@ export default function AddStaffPage() {
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        id="nurse-signup-email"
+                        id="nurse-email"
                         name="email"
                         type="email"
                         placeholder="nurse@example.com"
-                        value={nurseSignupData.email}
-                        onChange={handleNurseSignupInputChange}
+                        value={nurseFormData.email}
+                        onChange={handleNurseInputChange}
                         className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                         required
                       />
@@ -1072,7 +1172,7 @@ export default function AddStaffPage() {
                   {/* Phone Number */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="nurse-signup-phone"
+                      htmlFor="nurse-phone"
                       className="block text-sm font-semibold text-gray-700"
                     >
                       Phone Number <span className="text-red-500">*</span>
@@ -1080,12 +1180,38 @@ export default function AddStaffPage() {
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        id="nurse-signup-phone"
+                        id="nurse-phone"
                         name="phonenumber"
                         type="tel"
                         placeholder="+94 77 123 4567"
-                        value={nurseSignupData.phonenumber}
-                        onChange={handleNurseSignupInputChange}
+                        value={nurseFormData.phonenumber}
+                        onChange={handleNurseInputChange}
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Experience */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="nurse-experience"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Years of Experience{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="nurse-experience"
+                        name="experience"
+                        type="number"
+                        min="0"
+                        max="50"
+                        placeholder="5"
+                        value={nurseFormData.experience}
+                        onChange={handleNurseInputChange}
                         className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                         required
                       />
@@ -1095,22 +1221,203 @@ export default function AddStaffPage() {
                   {/* Age */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="nurse-signup-age"
+                      htmlFor="nurse-age"
                       className="block text-sm font-semibold text-gray-700"
                     >
-                      Age <span className="text-red-500">*</span>
+                      Age
                     </label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        id="nurse-signup-age"
+                        id="nurse-age"
                         name="age"
                         type="number"
                         min="18"
                         max="100"
                         placeholder="30"
-                        value={nurseSignupData.age}
-                        onChange={handleNurseSignupInputChange}
+                        value={nurseFormData.age}
+                        onChange={handleNurseInputChange}
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Profile Image URL */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="nurse-profile-image"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Profile Image URL
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="nurse-profile-image"
+                        name="profileImage"
+                        type="url"
+                        placeholder="https://example.com/image.jpg"
+                        value={nurseFormData.profileImage}
+                        onChange={handleNurseInputChange}
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Available Days */}
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Available Days <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {daysOfWeek.map((day) => (
+                    <label
+                      key={day}
+                      className="flex items-center gap-2 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={nurseFormData.availableDays.includes(day)}
+                        onChange={() =>
+                          handleNurseCheckboxChange("availableDays", day)
+                        }
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">{day}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-6 border-t">
+                <button
+                  type="submit"
+                  disabled={submitLoading}
+                  className="px-6 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitLoading ? "Adding Nurse..." : "Add Nurse"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  disabled={submitLoading}
+                  className="px-6 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* Cashier Form */}
+        {activeTab === "cashier" && (
+          <form
+            onSubmit={handleCashierSubmit}
+            className="bg-white rounded-xl shadow-sm p-8"
+          >
+            <div className="space-y-6">
+              {/* Basic Information Section */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                  Cashier Information
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Cashiers are responsible for creating appointments for
+                  patients who come to the hospital directly.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Name */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="cashier-name"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="cashier-name"
+                        name="name"
+                        type="text"
+                        placeholder="John Doe"
+                        value={cashierFormData.name}
+                        onChange={handleCashierInputChange}
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="cashier-email"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="cashier-email"
+                        name="email"
+                        type="email"
+                        placeholder="cashier@example.com"
+                        value={cashierFormData.email}
+                        onChange={handleCashierInputChange}
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="cashier-phone"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="cashier-phone"
+                        name="phonenumber"
+                        type="tel"
+                        placeholder="+94 77 123 4567"
+                        value={cashierFormData.phonenumber}
+                        onChange={handleCashierInputChange}
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Age */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="cashier-age"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Age <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="cashier-age"
+                        name="age"
+                        type="number"
+                        min="18"
+                        max="100"
+                        placeholder="25"
+                        value={cashierFormData.age}
+                        onChange={handleCashierInputChange}
                         className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                         required
                       />
@@ -1120,17 +1427,17 @@ export default function AddStaffPage() {
                   {/* Gender */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="nurse-signup-gender"
+                      htmlFor="cashier-gender"
                       className="block text-sm font-semibold text-gray-700"
                     >
                       Gender <span className="text-red-500">*</span>
                     </label>
                     <select
-                      id="nurse-signup-gender"
+                      id="cashier-gender"
                       name="gender"
-                      value={nurseSignupData.gender}
+                      value={cashierFormData.gender}
                       onChange={(e) =>
-                        setNurseSignupData((prev) => ({
+                        setCashierFormData((prev) => ({
                           ...prev,
                           gender: e.target.value,
                         }))
@@ -1148,7 +1455,7 @@ export default function AddStaffPage() {
                   {/* NIC */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="nurse-signup-nic"
+                      htmlFor="cashier-nic"
                       className="block text-sm font-semibold text-gray-700"
                     >
                       NIC Number <span className="text-red-500">*</span>
@@ -1156,12 +1463,12 @@ export default function AddStaffPage() {
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        id="nurse-signup-nic"
+                        id="cashier-nic"
                         name="nic"
                         type="text"
                         placeholder="123456789V or 200012345678"
-                        value={nurseSignupData.nic}
-                        onChange={handleNurseSignupInputChange}
+                        value={cashierFormData.nic}
+                        onChange={handleCashierInputChange}
                         pattern="^([0-9]{9}[VvXx]|[0-9]{12})$"
                         title="NIC must be either 9 digits followed by V/X or 12 digits"
                         className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
@@ -1173,6 +1480,28 @@ export default function AddStaffPage() {
                       format: 12 digits
                     </p>
                   </div>
+
+                  {/* Profile Image URL */}
+                  <div className="space-y-2 md:col-span-2">
+                    <label
+                      htmlFor="cashier-profile-image"
+                      className="block text-sm font-semibold text-gray-700"
+                    >
+                      Profile Image URL
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="cashier-profile-image"
+                        name="profileImage"
+                        type="url"
+                        placeholder="https://example.com/image.jpg"
+                        value={cashierFormData.profileImage}
+                        onChange={handleCashierInputChange}
+                        className="w-full h-12 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1180,7 +1509,7 @@ export default function AddStaffPage() {
                     <strong>Note:</strong> After submission, login credentials
                     will be automatically sent to{" "}
                     <strong>
-                      {nurseSignupData.email || "the nurse's email"}
+                      {cashierFormData.email || "the cashier's email"}
                     </strong>
                   </p>
                 </div>
@@ -1195,7 +1524,7 @@ export default function AddStaffPage() {
                 >
                   {submitLoading
                     ? "Creating Account..."
-                    : "Create Nurse Account"}
+                    : "Create Cashier Account"}
                 </button>
                 <button
                   type="button"
