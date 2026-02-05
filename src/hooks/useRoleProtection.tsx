@@ -57,6 +57,7 @@ export function useRoleProtection({
           nurse: "/user/dashboard",
           patient: "/user/dashboard",
           user: "/user/dashboard",
+          cashier: "/cashier/dashboard",
         };
 
         const destination = redirectTo || roleRedirects[userRole] || "/login";
