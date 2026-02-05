@@ -9,7 +9,7 @@ export interface MagicLinkPayload {
   role: string;
   hospitalId: string;
   hospitalName: string;
-  type: "doctor-setup" | "nurse-setup";
+  type: "doctor-setup" | "nurse-setup" | "cashier-dashboard";
   createdByHospital: boolean;
 }
 
