@@ -331,6 +331,7 @@ model Appointment {
   queuePosition                  Int?
   status                         AppointmentStatus                @default(CONFIRMED)
   paymentStatus                  PaymentStatus                    @default(PENDING)
+  patientAge                    Int?
   consultationFee                Decimal                          @db.Decimal(10, 2)
   totalAmount                    Decimal                          @db.Decimal(10, 2)
   notes                          String?
