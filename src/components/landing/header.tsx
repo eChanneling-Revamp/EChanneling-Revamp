@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 export default function Header() {
   return (
@@ -49,32 +49,58 @@ export default function Header() {
           >
             <span
               className="text-primary-foreground font-bold text-lg"
-              style={{ color: "white", fontWeight: "bold", fontSize: "1.125rem" }}
+              style={{
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "1.125rem",
+              }}
             >
               eC
             </span>
           </div>
           <span
             className="font-bold text-xl text-foreground"
-            style={{ fontWeight: "bold", fontSize: "1.25rem", color: "#1e293b" }}
+            style={{
+              fontWeight: "bold",
+              fontSize: "1.25rem",
+              color: "#1e293b",
+            }}
           >
             eChanneling
           </span>
         </motion.div>
 
-        <div className="hidden md:flex items-center gap-8" style={{ display: "none", gap: "2rem" }}>
-          <a href="#features" className="text-foreground/70 hover:text-foreground transition">
+        <div
+          className="hidden md:flex items-center gap-8"
+          style={{ display: "none", gap: "2rem" }}
+        >
+          <a
+            href="#features"
+            className="text-foreground/70 hover:text-foreground transition"
+          >
             Features
           </a>
-          <a href="#how-it-works" className="text-foreground/70 hover:text-foreground transition">
+          <a
+            href="#how-it-works"
+            className="text-foreground/70 hover:text-foreground transition"
+          >
             How it Works
           </a>
-          <a href="#testimonials" className="text-foreground/70 hover:text-foreground transition">
+          <a
+            href="#testimonials"
+            className="text-foreground/70 hover:text-foreground transition"
+          >
             Testimonials
           </a>
         </div>
 
-        <div className="flex items-center gap-3" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div
+          className="flex items-center gap-3"
+          style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+        >
+          <a href="/prescriptions/search">
+            <Button variant="outline">View Prescription</Button>
+          </a>
           <Button variant="outline">Sign In</Button>
           <Button
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -85,5 +111,5 @@ export default function Header() {
         </div>
       </nav>
     </motion.header>
-  )
+  );
 }

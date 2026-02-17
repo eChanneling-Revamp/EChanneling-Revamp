@@ -4,6 +4,7 @@ import Footer from "@/components/landing/footer";
 import Header from "@/components/landing/header";
 import Hero from "@/components/landing/hero";
 import HowItWorks from "@/components/landing/how-it-works";
+import PrescriptionSection from "@/components/landing/prescription-section";
 import Testimonials from "@/components/landing/testimonials";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
       <Hero />
       <Features />
       <HowItWorks />
+      <PrescriptionSection />
       <Testimonials />
       <CTA />
       <Footer />
