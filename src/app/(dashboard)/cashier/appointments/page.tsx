@@ -31,6 +31,9 @@ export default function AppointmentsListPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const userDataStr = localStorage.getItem("user");
@@ -104,6 +107,33 @@ export default function AppointmentsListPage() {
         return "bg-red-100 text-red-700";
       default:
         return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const handlePaymentStatusUpdate = async (appointmentId: string) => {
+    try {
+      setUpdatingPaymentId(appointmentId);
+      const response = await axios.patch(
+        `/api/appointments/${appointmentId}/payment-status`,
+        { paymentStatus: "COMPLETED" },
+      );
+
+      if (response.data.success) {
+        toast.success("Payment status updated to COMPLETED");
+        // Refresh appointments (use hospitalId from cashierData)
+        if (cashierData?.hospitalId) {
+          await fetchAppointments(cashierData.hospitalId);
+        }
+      } else {
+        toast.error("Failed to update payment status");
+      }
+    } catch (error: any) {
+      console.error("Error updating payment status:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to update payment status",
+      );
+    } finally {
+      setUpdatingPaymentId(null);
     }
   };
 
@@ -183,13 +213,13 @@ export default function AppointmentsListPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name, email, phone, or appointment number..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
             >
               <option value="all">All Status</option>
               <option value="scheduled">Scheduled</option>
@@ -323,13 +353,48 @@ export default function AppointmentsListPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(
-                            appointment.paymentStatus,
-                          )}`}
-                        >
-                          {appointment.paymentStatus}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(
+                              appointment.paymentStatus,
+                            )}`}
+                          >
+                            {appointment.paymentStatus}
+                          </span>
+                          {appointment.paymentStatus === "PENDING" && (
+                            <button
+                              onClick={() =>
+                                handlePaymentStatusUpdate(appointment.id)
+                              }
+                              disabled={updatingPaymentId === appointment.id}
+                              className="px-3 py-1 text-xs font-medium rounded bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                            >
+                              {updatingPaymentId === appointment.id ? (
+                                <>
+                                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  Updating...
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                  Complete
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
