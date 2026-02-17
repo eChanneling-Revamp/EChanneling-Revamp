@@ -46,6 +46,7 @@ export async function POST(req: Request) {
         _count: {
           select: { appointments: true },
         },
+        doctors: true, // Include doctor to get consultation fee
       },
     });
 
@@ -62,6 +63,11 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+
+    // Get doctor's consultation fee from the session
+    const doctorConsultationFee = session.doctors?.consultationFee || 0;
+    const consultationFee = body.consultationFee || doctorConsultationFee;
+    const totalAmount = body.totalAmount || consultationFee;
 
     // Generate unique appointment number
     const appointmentNumber = `APT-${Date.now()}-${Math.random()
@@ -103,8 +109,8 @@ export async function POST(req: Request) {
         estimatedWaitTime: body.estimatedWaitTime || null,
         status: body.status || "CONFIRMED",
         paymentStatus: body.paymentStatus || "PENDING",
-        consultationFee: body.consultationFee || null,
-        totalAmount: body.totalAmount || null,
+        consultationFee: consultationFee,
+        totalAmount: totalAmount,
         notes: body.notes || null,
       } as any,
       include: {
@@ -222,7 +228,22 @@ export async function GET(req: Request) {
       patientName: appointment.patientName,
       patientEmail: appointment.patientEmail,
       patientPhone: appointment.patientPhone,
+      patientNIC: appointment.patientNIC,
+      patientDateOfBirth: appointment.patientDateOfBirth,
+      patientAge: appointment.patientAge,
       patientGender: appointment.patientGender,
+      emergencyContactName: appointment.emergencyContactName,
+      emergencyContactPhone: appointment.emergencyContactPhone,
+      medicalHistory: appointment.medicalHistory,
+      currentMedications: appointment.currentMedications,
+      allergies: appointment.allergies,
+      insuranceProvider: appointment.insuranceProvider,
+      insurancePolicyNumber: appointment.insurancePolicyNumber,
+      isNewPatient: appointment.isNewPatient,
+      queuePosition: appointment.queuePosition,
+      estimatedWaitTime: appointment.estimatedWaitTime,
+      consultationFee: appointment.consultationFee,
+      totalAmount: appointment.totalAmount,
       sessionDate:
         appointment.session?.startTime || appointment.session?.scheduledAt,
       sessionTime:
@@ -234,7 +255,11 @@ export async function GET(req: Request) {
       paymentStatus: appointment.paymentStatus,
       bookingType: appointment.isNewPatient ? "walk-in" : "online",
       notes: appointment.notes,
+      cancellationReason: appointment.cancellationReason,
+      cancellationDate: appointment.cancellationDate,
       createdAt: appointment.createdAt,
+      updatedAt: appointment.updatedAt,
+      session: appointment.session,
     }));
 
     return NextResponse.json({

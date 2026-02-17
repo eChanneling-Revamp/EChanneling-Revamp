@@ -1,5 +1,15 @@
 "use client";
-import { Search, Eye, Calendar, Clock, User, Phone, Mail, FileText } from "lucide-react";
+import {
+  Search,
+  Eye,
+  Calendar,
+  Clock,
+  User,
+  Phone,
+  Mail,
+  FileText,
+  CheckCircle,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDoctorStatus } from "@/hooks/useDoctorStatus";
@@ -50,6 +60,11 @@ interface Appointment {
   estimatedWaitTime?: number;
   queuePosition?: number;
   status:
+    | "WAITING"
+    | "CALLED"
+    | "SKIPPED"
+    | "ABSENT"
+    | "SERVED"
     | "CONFIRMED"
     | "CANCELLED"
     | "COMPLETED"
@@ -99,6 +114,9 @@ export default function DoctorAppointmentsPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
+  const [completingAppointmentId, setCompletingAppointmentId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!statusLoading && needsSetup) {
@@ -120,8 +138,10 @@ export default function DoctorAppointmentsPage() {
       }
 
       const sessions = await sessionsRes.json();
+      console.log("📅 Fetched sessions for doctor:", sessions.length);
 
       if (!sessions || sessions.length === 0) {
+        console.log("⚠️ No sessions found for doctor");
         setAppointments([]);
         setFilteredAppointments([]);
         setLoading(false);
@@ -130,27 +150,37 @@ export default function DoctorAppointmentsPage() {
 
       // Get all appointments for these sessions
       const sessionIds = sessions.map((s: any) => s.id);
+      console.log("🔍 Fetching appointments for session IDs:", sessionIds);
+
       const appointmentsPromises = sessionIds.map((sessionId: string) =>
         fetch(`/api/appointments?sessionId=${sessionId}`).then((res) =>
-          res.json()
-        )
+          res.json(),
+        ),
       );
 
       const appointmentsResults = await Promise.all(appointmentsPromises);
-      const allAppointments = appointmentsResults.flatMap((result) =>
-        Array.isArray(result) ? result : []
-      );
+
+      // Extract appointments from the response (API returns {success, data, count})
+      const allAppointments = appointmentsResults.flatMap((result) => {
+        if (result && result.data && Array.isArray(result.data)) {
+          return result.data;
+        }
+        return Array.isArray(result) ? result : [];
+      });
+
+      console.log("✅ Total appointments fetched:", allAppointments.length);
 
       // Sort by created date (newest first)
       allAppointments.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
 
       setAppointments(allAppointments);
       setFilteredAppointments(allAppointments);
+      console.log("💾 Appointments state updated successfully");
     } catch (error) {
-      console.error("Error fetching appointments:", error);
+      console.error("❌ Error fetching appointments:", error);
       setAppointments([]);
       setFilteredAppointments([]);
     } finally {
@@ -166,19 +196,21 @@ export default function DoctorAppointmentsPage() {
       try {
         const userData = JSON.parse(userDataStr);
         const email = userData.email;
+        console.log("👨‍⚕️ Fetching doctor data for email:", email);
 
         fetch(`/api/hospital/doctor?email=${email}`)
           .then((res) => res.json())
           .then((data) => {
             if (data.data && data.data.id) {
+              console.log("✅ Doctor ID found:", data.data.id);
               setDoctorId(data.data.id);
             } else {
               console.error(
-                "Doctor not found:",
-                data.error || "No doctor data returned"
+                "❌ Doctor not found:",
+                data.error || "No doctor data returned",
               );
               alert(
-                `Doctor not found for email: ${email}. Please contact administrator.`
+                `Doctor not found for email: ${email}. Please contact administrator.`,
               );
             }
           })
@@ -211,7 +243,7 @@ export default function DoctorAppointmentsPage() {
           apt.patientEmail.toLowerCase().includes(query) ||
           apt.patientPhone.includes(query) ||
           apt.appointmentNumber.toLowerCase().includes(query) ||
-          (apt.patientNIC && apt.patientNIC.toLowerCase().includes(query))
+          (apt.patientNIC && apt.patientNIC.toLowerCase().includes(query)),
       );
     }
 
@@ -223,7 +255,7 @@ export default function DoctorAppointmentsPage() {
     // Payment status filter
     if (filterPaymentStatus !== "all") {
       filtered = filtered.filter(
-        (apt) => apt.paymentStatus === filterPaymentStatus
+        (apt) => apt.paymentStatus === filterPaymentStatus,
       );
     }
 
@@ -235,6 +267,8 @@ export default function DoctorAppointmentsPage() {
       case "CONFIRMED":
         return "bg-blue-100 text-blue-800";
       case "COMPLETED":
+        return "bg-green-100 text-green-800";
+      case "SERVED":
         return "bg-green-100 text-green-800";
       case "CANCELLED":
         return "bg-red-100 text-red-800";
@@ -296,6 +330,44 @@ export default function DoctorAppointmentsPage() {
   const handleViewAppointment = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsViewDialogOpen(true);
+  };
+
+  const handleCompleteAppointment = async (appointmentId: string) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to mark this appointment as completed? An email will be sent to the patient with the appointment details.",
+      )
+    ) {
+      return;
+    }
+
+    setCompletingAppointmentId(appointmentId);
+    try {
+      const response = await fetch(
+        `/api/appointments/${appointmentId}/complete`,
+        {
+          method: "POST",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to complete appointment");
+      }
+
+      // Refresh appointments
+      await fetchAppointments();
+
+      alert(
+        "Appointment marked as completed successfully! An email has been sent to the patient.",
+      );
+    } catch (error: any) {
+      console.error("Error completing appointment:", error);
+      alert(`Failed to complete appointment: ${error.message}`);
+    } finally {
+      setCompletingAppointmentId(null);
+    }
   };
 
   if (statusLoading) {
@@ -530,7 +602,7 @@ export default function DoctorAppointmentsPage() {
                             </Badge>
                             <Badge
                               className={getPaymentStatusColor(
-                                appointment.paymentStatus
+                                appointment.paymentStatus,
                               )}
                             >
                               {appointment.paymentStatus}
@@ -603,7 +675,7 @@ export default function DoctorAppointmentsPage() {
                             size="sm"
                             onClick={() =>
                               router.push(
-                                `/doctor/prescriptions?appointmentId=${appointment.id}`
+                                `/doctor/prescriptions?appointmentId=${appointment.id}`,
                               )
                             }
                             className="bg-green-600 hover:bg-green-700 text-white hover:text-white"
@@ -620,6 +692,25 @@ export default function DoctorAppointmentsPage() {
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </Button>
+                          {appointment.status !== "SERVED" &&
+                            appointment.status !== "CANCELLED" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleCompleteAppointment(appointment.id)
+                                }
+                                disabled={
+                                  completingAppointmentId === appointment.id
+                                }
+                                className="bg-amber-600 hover:bg-amber-700 text-white hover:text-white"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {completingAppointmentId === appointment.id
+                                  ? "Completing..."
+                                  : "Complete"}
+                              </Button>
+                            )}
                         </div>
                       </div>
                     </CardContent>
@@ -815,7 +906,7 @@ export default function DoctorAppointmentsPage() {
                     <p className="text-sm text-gray-600">Payment Status</p>
                     <Badge
                       className={getPaymentStatusColor(
-                        selectedAppointment.paymentStatus
+                        selectedAppointment.paymentStatus,
                       )}
                     >
                       {selectedAppointment.paymentStatus}
@@ -916,7 +1007,7 @@ export default function DoctorAppointmentsPage() {
                           <p className="text-sm text-gray-600">Cancelled On</p>
                           <p className="font-medium">
                             {formatDateTime(
-                              selectedAppointment.cancellationDate
+                              selectedAppointment.cancellationDate,
                             )}
                           </p>
                         </div>

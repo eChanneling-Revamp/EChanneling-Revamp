@@ -82,6 +82,17 @@ model User {
   @@map("users")
 }
 
+model UserLog {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      String?
+  nic       String?
+  createdAt DateTime @default(now())
+
+  @@map("userlog")
+}
+
 model Agent {
   id                 String             @id @default(cuid())
   name               String
@@ -827,6 +838,11 @@ model packages {
 }
 
 enum AppointmentStatus {
+  WAITING
+  CALLED
+  SKIPPED
+  ABSENT
+  SERVED
   CONFIRMED
   CANCELLED
   COMPLETED

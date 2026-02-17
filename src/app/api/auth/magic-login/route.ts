@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import { verifyMagicLinkToken } from "@/lib/jwt";
-import axios from "axios";
-
-const EXTERNAL_API_URL = "https://dpdlab1.slt.lk:8645/auth/api";
 
 export async function POST(req: Request) {
   try {
@@ -25,11 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verify user exists in external API
     try {
-      // You might need to implement a user verification endpoint in your external API
-      // For now, we'll return the user data from the token
-
       const user = {
         email: payload.email,
         name: payload.name,

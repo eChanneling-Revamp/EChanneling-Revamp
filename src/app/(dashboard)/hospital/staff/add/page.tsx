@@ -67,6 +67,7 @@ export default function AddStaffPage() {
   const [doctorSignupData, setDoctorSignupData] = useState({
     name: "",
     email: "",
+    password: "", // Added password field for UserLog
     phonenumber: "",
     age: "",
     gender: "",
@@ -306,24 +307,23 @@ export default function AddStaffPage() {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || nameParts[0];
 
-      // Step 1: Create user account via external API
+      // Step 1: Create user account via local auth API
       console.log("Attempting to create doctor account with:", {
-        first_name: firstName,
-        last_name: lastName,
+        firstName: firstName,
+        lastName: lastName,
         email: doctorSignupData.email,
-        phone_number: doctorSignupData.phonenumber,
+        phoneNumber: doctorSignupData.phonenumber,
         role: "doctor",
         age: parseInt(doctorSignupData.age),
         gender: doctorSignupData.gender.toLowerCase(),
       });
 
-      const signupResponse = await axios.post("/api/external-auth/register", {
-        first_name: firstName,
-        last_name: lastName,
+      const signupResponse = await axios.post("/api/auth/signup", {
+        firstName: firstName,
+        lastName: lastName,
         email: doctorSignupData.email,
         password: generatedPassword,
-        confirm_password: generatedPassword,
-        phone_number: doctorSignupData.phonenumber,
+        phoneNumber: doctorSignupData.phonenumber,
         nic: doctorSignupData.nic,
         role: "doctor",
         age: parseInt(doctorSignupData.age),
@@ -477,7 +477,49 @@ export default function AddStaffPage() {
         return;
       }
 
-      // Create nurse record directly in nurse_details table
+      // Generate random password
+      const generatedPassword = generatePassword();
+      console.log("Generated password:", generatedPassword);
+      console.log("Password validation:", {
+        hasUppercase: /[A-Z]/.test(generatedPassword),
+        hasLowercase: /[a-z]/.test(generatedPassword),
+        hasNumber: /[0-9]/.test(generatedPassword),
+        hasSpecial: /[!@#$%^&*]/.test(generatedPassword),
+        length: generatedPassword.length,
+      });
+
+      // Split name into first and last name
+      const nameParts = nurseFormData.name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || nameParts[0];
+
+      // Step 1: Create user account via local auth API
+      console.log("Attempting to create nurse account with:", {
+        firstName: firstName,
+        lastName: lastName,
+        email: nurseFormData.email,
+        phoneNumber: nurseFormData.phonenumber,
+        role: "nurse",
+        age: parseInt(nurseFormData.age || "25"),
+      });
+
+      const signupResponse = await axios.post("/api/auth/signup", {
+        firstName: firstName,
+        lastName: lastName,
+        email: nurseFormData.email,
+        password: generatedPassword,
+        phoneNumber: nurseFormData.phonenumber,
+        role: "nurse",
+        age: nurseFormData.age ? parseInt(nurseFormData.age) : null,
+      });
+
+      console.log("Nurse account created successfully:", signupResponse.data);
+
+      if (!signupResponse.data) {
+        throw new Error("Failed to create user account");
+      }
+
+      // Step 2: Create nurse record in nurse_details table
       const nurseData = {
         name: nurseFormData.name,
         email: nurseFormData.email,
@@ -495,10 +537,24 @@ export default function AddStaffPage() {
       const response = await axios.post("/api/hospital/nurse", nurseData);
 
       if (response.data && response.data.success) {
-        toast.success("Nurse added successfully!");
+        // Step 3: Send welcome email with credentials and magic link
+        await axios.post("/api/email/send-credentials", {
+          to: nurseFormData.email,
+          name: nurseFormData.name,
+          email: nurseFormData.email,
+          phonenumber: nurseFormData.phonenumber,
+          password: generatedPassword,
+          role: "nurse",
+          hospitalId: hospitalId,
+          hospitalName: hospitalName,
+        });
+
+        toast.success(
+          "Nurse account created successfully! Login credentials have been sent to their email.",
+        );
         setTimeout(() => {
           router.push("/hospital/staff");
-        }, 1500);
+        }, 2000);
       }
     } catch (err: any) {
       console.error("Nurse creation error:", err);
@@ -558,8 +614,50 @@ export default function AddStaffPage() {
       // Generate random password
       const generatedPassword = generatePassword();
       console.log("Generated password:", generatedPassword);
+      console.log("Password validation:", {
+        hasUppercase: /[A-Z]/.test(generatedPassword),
+        hasLowercase: /[a-z]/.test(generatedPassword),
+        hasNumber: /[0-9]/.test(generatedPassword),
+        hasSpecial: /[!@#$%^&*]/.test(generatedPassword),
+        length: generatedPassword.length,
+      });
 
-      // Create cashier record in database with hashed password
+      // Split name into first and last name
+      const nameParts = cashierFormData.name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || nameParts[0];
+
+      // Step 1: Create user account via local auth API
+      console.log("Attempting to create cashier account with:", {
+        firstName: firstName,
+        lastName: lastName,
+        email: cashierFormData.email,
+        phoneNumber: cashierFormData.phonenumber,
+        role: "cashier",
+        age: parseInt(cashierFormData.age),
+        gender: cashierFormData.gender.toLowerCase(),
+        nic: cashierFormData.nic,
+      });
+
+      const signupResponse = await axios.post("/api/auth/signup", {
+        firstName: firstName,
+        lastName: lastName,
+        email: cashierFormData.email,
+        password: generatedPassword,
+        phoneNumber: cashierFormData.phonenumber,
+        nic: cashierFormData.nic,
+        role: "cashier",
+        age: parseInt(cashierFormData.age),
+        gender: cashierFormData.gender.toLowerCase(),
+      });
+
+      console.log("Cashier account created successfully:", signupResponse.data);
+
+      if (!signupResponse.data) {
+        throw new Error("Failed to create user account");
+      }
+
+      // Step 2: Create cashier record in database with hashed password
       const cashierData = {
         name: cashierFormData.name,
         email: cashierFormData.email,
@@ -578,7 +676,7 @@ export default function AddStaffPage() {
       const response = await axios.post("/api/hospital/cashier", cashierData);
 
       if (response.data && response.data.success) {
-        // Send welcome email with credentials
+        // Step 3: Send welcome email with credentials and magic link
         await axios.post("/api/email/send-credentials", {
           to: cashierFormData.email,
           name: cashierFormData.name,

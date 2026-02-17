@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,12 +28,14 @@ import {
   ChevronLeft,
   ChevronRight,
   History,
+  ArrowLeft,
 } from "lucide-react";
 
 function PrescriptionsPageContent() {
   const { isAuthorized, isLoading } = useRoleProtection({
     allowedRoles: ["doctor"],
   });
+  const router = useRouter();
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId");
 
@@ -48,7 +50,7 @@ function PrescriptionsPageContent() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [editorElement, setEditorElement] = useState<HTMLDivElement | null>(
-    null
+    null,
   );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [prescriptionHistory, setPrescriptionHistory] = useState<any[]>([]);
@@ -83,10 +85,10 @@ function PrescriptionsPageContent() {
   const [selectedDrugIndex, setSelectedDrugIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedComponent, setDraggedComponent] = useState<HTMLElement | null>(
-    null
+    null,
   );
   const [dragPlaceholder, setDragPlaceholder] = useState<HTMLElement | null>(
-    null
+    null,
   );
 
   const commandItems = [
@@ -137,7 +139,7 @@ function PrescriptionsPageContent() {
         const currentUrl = linkElement.href;
         const newUrl = prompt(
           "Edit URL (leave empty to remove link):",
-          currentUrl
+          currentUrl,
         );
         if (newUrl === null) return; // User cancelled
         if (newUrl === "") {
@@ -209,7 +211,7 @@ function PrescriptionsPageContent() {
     // Capture all input, textarea, and checkbox/radio values
     const inputs = editorElement.querySelectorAll("input, textarea, select");
     const clonedInputs = clonedContent.querySelectorAll(
-      "input, textarea, select"
+      "input, textarea, select",
     );
 
     inputs.forEach((input, index) => {
@@ -323,7 +325,7 @@ function PrescriptionsPageContent() {
       case "ArrowDown":
         e.preventDefault();
         setSelectedCommandIndex((prev) =>
-          prev < commandItems.length - 1 ? prev + 1 : prev
+          prev < commandItems.length - 1 ? prev + 1 : prev,
         );
         break;
       case "ArrowUp":
@@ -415,7 +417,7 @@ function PrescriptionsPageContent() {
               // Fetch prescription history for sidebar
               setLoadingHistory(true);
               fetch(
-                `/api/prescriptions/history?patientNIC=${appointment.patientNIC}`
+                `/api/prescriptions/history?patientNIC=${appointment.patientNIC}`,
               )
                 .then((res) => res.json())
                 .then((historyData) => {
@@ -431,7 +433,7 @@ function PrescriptionsPageContent() {
 
               // Fetch last prescription to load in editor
               fetch(
-                `/api/prescriptions/last?patientNIC=${appointment.patientNIC}`
+                `/api/prescriptions/last?patientNIC=${appointment.patientNIC}`,
               )
                 .then((res) => res.json())
                 .then((prescriptionData) => {
@@ -477,7 +479,7 @@ function PrescriptionsPageContent() {
                 .catch((err) => {
                   // Silently fail if no previous prescription found
                   console.log(
-                    "No previous prescription found for this patient"
+                    "No previous prescription found for this patient",
                   );
                 });
             }
@@ -512,7 +514,7 @@ function PrescriptionsPageContent() {
           case "ArrowDown":
             e.preventDefault();
             setSelectedDrugIndex((prev) =>
-              prev < drugSuggestions.length - 1 ? prev + 1 : prev
+              prev < drugSuggestions.length - 1 ? prev + 1 : prev,
             );
             break;
           case "ArrowUp":
@@ -539,7 +541,7 @@ function PrescriptionsPageContent() {
         case "ArrowDown":
           e.preventDefault();
           setSelectedCommandIndex((prev) =>
-            prev < commandItems.length - 1 ? prev + 1 : prev
+            prev < commandItems.length - 1 ? prev + 1 : prev,
           );
           break;
         case "ArrowUp":
@@ -635,7 +637,7 @@ function PrescriptionsPageContent() {
 
       // Find the component container
       const component = dragHandle.closest(
-        "[data-medication-container], [data-dietary-container], [data-instructions-container]"
+        "[data-medication-container], [data-dietary-container], [data-instructions-container]",
       ) as HTMLElement;
       if (!component) {
         return;
@@ -695,7 +697,7 @@ function PrescriptionsPageContent() {
         if (currentDragElement.parentNode) {
           currentDragElement.parentNode.insertBefore(
             placeholder!,
-            currentDragElement
+            currentDragElement,
           );
         }
 
@@ -727,7 +729,7 @@ function PrescriptionsPageContent() {
         if (elementBelow) {
           // First check if hovering over a component
           const dropTarget = elementBelow.closest(
-            "[data-medication-container], [data-dietary-container], [data-instructions-container]"
+            "[data-medication-container], [data-dietary-container], [data-instructions-container]",
           ) as HTMLElement;
 
           if (dropTarget && dropTarget !== currentDragElement && placeholder) {
@@ -745,7 +747,7 @@ function PrescriptionsPageContent() {
             } else {
               dropTarget.parentNode?.insertBefore(
                 placeholder,
-                dropTarget.nextSibling
+                dropTarget.nextSibling,
               );
             }
           } else if (
@@ -820,7 +822,7 @@ function PrescriptionsPageContent() {
                 } else {
                   targetNode.parentNode?.insertBefore(
                     placeholder,
-                    targetNode.nextSibling
+                    targetNode.nextSibling,
                   );
                 }
               } else if (targetNode.nodeType === Node.TEXT_NODE) {
@@ -835,7 +837,7 @@ function PrescriptionsPageContent() {
                 } else {
                   targetNode.parentNode?.insertBefore(
                     placeholder,
-                    targetNode.nextSibling
+                    targetNode.nextSibling,
                   );
                 }
               }
@@ -971,11 +973,22 @@ function PrescriptionsPageContent() {
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm print:hidden">
           <div className="max-w-5xl mx-auto px-6 py-3">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="w-6 h-6 text-blue-600" />
-                <h1 className="text-xl font-semibold text-gray-900">
-                  New Prescription
-                </h1>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/doctor/appointments")}
+                  className="flex items-center gap-2 hover:bg-gray-100"
+                  title="Back to Appointments"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </Button>
+                <div className="flex items-center gap-2">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    New Prescription
+                  </h1>
+                </div>
               </div>
               <div className="flex gap-2">
                 {patientInfo.nic && (
@@ -1257,8 +1270,8 @@ function PrescriptionsPageContent() {
                               item.color === "blue"
                                 ? "bg-blue-500"
                                 : item.color === "green"
-                                ? "bg-green-500"
-                                : "bg-purple-500"
+                                  ? "bg-green-500"
+                                  : "bg-purple-500"
                             }`}
                           >
                             <item.icon className="h-5 w-5 text-white" />
@@ -1710,10 +1723,10 @@ function PrescriptionsPageContent() {
                                 prescription.status === "ACTIVE"
                                   ? "bg-green-500"
                                   : prescription.status === "REVISED"
-                                  ? "bg-yellow-500"
-                                  : prescription.status === "CANCELLED"
-                                  ? "bg-red-500"
-                                  : "bg-blue-500"
+                                    ? "bg-yellow-500"
+                                    : prescription.status === "CANCELLED"
+                                      ? "bg-red-500"
+                                      : "bg-blue-500"
                               }`}
                             ></div>
                             <span className="text-xs text-gray-500">

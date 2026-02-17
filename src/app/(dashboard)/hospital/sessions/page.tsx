@@ -67,6 +67,21 @@ interface Nurse {
   name: string;
 }
 
+// Helper function to convert UTC datetime to local datetime string for datetime-local input
+const formatDateTimeLocal = (utcDateString: string | undefined): string => {
+  if (!utcDateString) return "";
+
+  const date = new Date(utcDateString);
+  // Get the local datetime components
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 export default function SessionsPage() {
   const { status: hospitalStatus, isLoading: statusLoading } =
     useHospitalStatus();
@@ -1444,13 +1459,9 @@ export default function SessionsPage() {
                       <input
                         name="startTime"
                         type="datetime-local"
-                        defaultValue={
-                          selectedSession.startTime
-                            ? new Date(selectedSession.startTime)
-                                .toISOString()
-                                .slice(0, 16)
-                            : ""
-                        }
+                        defaultValue={formatDateTimeLocal(
+                          selectedSession.startTime,
+                        )}
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         required
                       />
@@ -1463,13 +1474,9 @@ export default function SessionsPage() {
                       <input
                         name="endTime"
                         type="datetime-local"
-                        defaultValue={
-                          selectedSession.endTime
-                            ? new Date(selectedSession.endTime)
-                                .toISOString()
-                                .slice(0, 16)
-                            : ""
-                        }
+                        defaultValue={formatDateTimeLocal(
+                          selectedSession.endTime,
+                        )}
                         className="w-full h-11 px-4 text-base text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                         required
                       />

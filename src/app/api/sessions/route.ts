@@ -5,6 +5,7 @@ import {
   cancelSession,
   deleteSession,
 } from "@/controllers/sessionController";
+import { sendEmail, emailTemplates } from "@/config/mailer";
 
 /**
  * POST /api/sessions  → create a session
@@ -34,6 +35,59 @@ export async function POST(req: Request) {
       endTime: (session as any).endTime,
       scheduledAt: (session as any).scheduledAt,
     };
+
+    // Send email notification to the doctor
+    try {
+      const doctor = (session as any).doctors;
+      const hospital = (session as any).hospitals;
+
+      if (doctor && doctor.email && hospital) {
+        // Format date and time for email
+        const sessionDate = new Date((session as any).startTime);
+        const formattedDate = sessionDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const formattedStartTime = sessionDate.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const sessionEndDate = new Date((session as any).endTime);
+        const formattedEndTime = sessionEndDate.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        // Generate email content
+        const emailContent = emailTemplates.sessionCreated(
+          doctor.name,
+          hospital.name,
+          formattedDate,
+          formattedStartTime,
+          formattedEndTime,
+          (session as any).location || "To be confirmed",
+          (session as any).capacity || 5,
+        );
+
+        // Send the email
+        await sendEmail({
+          to: doctor.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+          text: emailContent.text,
+        });
+
+        console.log(
+          `✅ Session notification email sent to Dr. ${doctor.name} at ${doctor.email}`,
+        );
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the session creation
+      console.error("❌ Error sending session notification email:", emailError);
+      // Continue execution - session was created successfully
+    }
 
     return NextResponse.json(transformedSession, { status: 201 });
   } catch (err: any) {
