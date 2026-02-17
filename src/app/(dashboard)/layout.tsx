@@ -161,6 +161,24 @@ const patientMenu = [
   },
 ];
 
+const cashierMenu = [
+  {
+    title: "Dashboard",
+    icon: <LayoutDashboard className="w-5 h-5" />,
+    path: "/cashier",
+  },
+  {
+    title: "Book Appointments",
+    icon: <ClipboardList className="w-5 h-5" />,
+    path: "/cashier/appointments/create",
+  },
+  {
+    title: "My Profile",
+    icon: <UserCircle className="w-5 h-5" />,
+    path: "/profile",
+  },
+];
+
 export default function DashboardLayout({
   children,
 }: {
@@ -193,17 +211,20 @@ export default function DashboardLayout({
   const activeRole = pathname.startsWith("/admin")
     ? "admin"
     : pathname.startsWith("/hospital")
-    ? "hospital"
-    : pathname.startsWith("/doctor")
-    ? "doctor"
-    : pathname.startsWith("/user")
-    ? "user"
-    : "admin";
+      ? "hospital"
+      : pathname.startsWith("/doctor")
+        ? "doctor"
+        : pathname.startsWith("/cashier")
+          ? "cashier"
+          : pathname.startsWith("/user")
+            ? "user"
+            : "admin";
 
   // Set menu items based on active role
   let menuItems = platformAdminMenu;
   if (activeRole === "hospital") menuItems = hospitalAdminMenu;
   else if (activeRole === "doctor") menuItems = doctorMenu;
+  else if (activeRole === "cashier") menuItems = cashierMenu;
   else if (activeRole === "user") menuItems = patientMenu;
 
   // Handle dashboard switch - navigate to the role's dashboard
@@ -225,6 +246,7 @@ export default function DashboardLayout({
     const roleAccess: Record<string, string[]> = {
       doctor: ["doctor", "user"],
       hospital: ["hospital"],
+      cashier: ["cashier"],
       nurse: ["user"],
       patient: ["user"],
       user: ["user"],
@@ -394,6 +416,18 @@ export default function DashboardLayout({
                     }`}
                   >
                     Doctor
+                  </button>
+                )}
+                {canAccessRole("cashier") && (
+                  <button
+                    onClick={() => handleDashboardSwitch("cashier", "/cashier")}
+                    className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                      activeRole === "cashier"
+                        ? "bg-[#013e7f] text-white"
+                        : "bg-gray-100 text-[#013e7f] hover:bg-blue-50"
+                    }`}
+                  >
+                    Cashier
                   </button>
                 )}
                 {canAccessRole("user") && (
